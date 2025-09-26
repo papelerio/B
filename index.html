@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Notas - Blog de Notas</title>
+    <link rel="icon" href="https://64.media.tumblr.com/8f876dcfa0afe4f09e06719a7a04ed60/2448006a566ecc5e-db/s1280x1920/7ca841d996d2b8030b7c725e5da350f635da0a89.png" type="image/png">
+    <style>
+        :root {
+            --primary-color: #2ecc71; /* Verde esmeralda */
+            --secondary-color: #27ae60; /* Verde oscuro */
+            --light-color: #e8f5e9; /* Verde claro */
+            --dark-color: #1a3c34; /* Verde bosque */
+            --accent-color: #00e676; /* Verde lima */
+            --warning-color: #ffca28; /* Amarillo suave */
+            --copy-color: #2196f3; /* Azul para botón de copiar */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .search-input {
+            padding: 12px 20px;
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .mode-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .mode-btn.active {
+            background-color: var(--secondary-color);
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--accent-color);
+        }
+
+        .btn-success:hover {
+            background-color: #00c853;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+        }
+
+        .btn-warning:hover {
+            background-color: #ffb300;
+        }
+
+        .btn-copy {
+            background-color: var(--copy-color);
+        }
+
+        .btn-copy:hover {
+            background-color: #1976d2;
+        }
+
+        .notes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .note-item {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .note-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .note-item.selected-for-swap {
+            border: 3px solid var(--warning-color);
+            box-shadow: 0 0 15px var(--warning-color);
+        }
+
+        .note-item.selected-for-insert {
+            border: 3px solid var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+
+        .note-content {
+            padding: 15px;
+        }
+
+        .note-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+
+        .note-description {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .note-body {
+            font-size: 14px;
+            color: #333;
+            display: none;
+        }
+
+        .note-item.expanded .note-body {
+            display: block;
+        }
+
+        .edit-delete-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .edit-btn, .delete-btn, .color-btn, .reorder-btn, .copy-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .edit-btn {
+            background-color: var(--accent-color);
+        }
+
+        .edit-btn:hover {
+            background-color: #00c853;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+        }
+
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .color-btn {
+            background-color: #9b59b6;
+        }
+
+        .color-btn:hover {
+            background-color: #8e44ad;
+        }
+
+        .reorder-btn {
+            background-color: var(--warning-color);
+        }
+
+        .reorder-btn:hover {
+            background-color: #ffb300;
+        }
+
+        .reorder-btn.selected {
+            background-color: var(--secondary-color);
+        }
+
+        .swap-instructions {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #fff;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            grid-column: 1 / -1;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .color-picker-container {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .favorite-colors {
+            display: flex;
+            overflow-x: auto;
+            gap: 5px;
+            margin-top: 10px;
+            padding-bottom: 5px;
+        }
+
+        .favorite-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .favorite-color:hover {
+            transform: scale(1.1);
+        }
+
+        .favorite-color.selected {
+            border: 2px solid #000;
+        }
+
+        .remove-favorite {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #e74c3c;
+            color: white;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .remove-favorite:hover {
+            background-color: #c0392b;
+        }
+
+        .json-viewer {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Mis Notas - Blog de Notas</h1>
+        <p>Guarda, edita y personaliza tus notas en modo Personal o visualiza notas por defecto desde notas.json</p>
+        
+        <div class="search-container">
+            <input type="text" id="search-input" class="search-input" placeholder="Buscar por título o descripción...">
+        </div>
+        
+        <div class="mode-selector">
+            <button id="default-mode" class="mode-btn active">Por Defecto</button>
+            <button id="personal-mode" class="mode-btn">Personal</button>
+        </div>
+    </header>
+    
+    <div class="info-box" id="default-info">
+        <h3>Modo Por Defecto</h3>
+        <p>Estás viendo los datos del archivo <strong>notas.json</strong> almacenado en GitHub.</p>
+        <p>En este modo no puedes editar el contenido. Cambia al modo Personal para editar.</p>
+        <div class="controls">
+            <button id="download-default-json" class="btn-success">Descargar JSON por Defecto</button>
+        </div>
+    </div>
+    
+    <div class="info-box" id="personal-info" style="display: none;">
+        <h3>Modo Personal</h3>
+        <p>Estás editando tus propias notas localmente.</p>
+        <p>Puedes agregar, editar, eliminar, reordenar notas y personalizar colores de fondo.</p>
+    </div>
+    
+    <div class="controls" id="editing-controls" style="display: none;">
+        <button id="add-note-btn">Agregar nueva nota</button>
+        <button id="download-json" class="btn-success">Descargar JSON Personal</button>
+        <button id="load-json" class="btn-warning">Cargar desde JSON</button>
+        <button id="cancel-swap" style="display: none;">Cancelar reordenamiento</button>
+    </div>
+    
+    <div class="swap-instructions" id="swap-instructions">
+        <p id="swap-instruction-text">Modo intercambio: Selecciona una segunda nota para intercambiar posiciones</p>
+    </div>
+    
+    <div class="notes-container" id="notes-container">
+        <div class="empty-state" id="empty-state">
+            <h3>Cargando contenido...</h3>
+            <p>Esperando datos del archivo notas.json</p>
+        </div>
+    </div>
+    
+    <div id="json-section" style="display: none;">
+        <h3>Vista previa del JSON Personal</h3>
+        <div class="json-viewer" id="json-viewer">
+            {/* El contenido JSON se mostrará aquí */}
+        </div>
+    </div>
+    
+    <!-- Modal para agregar/editar nota -->
+    <div class="modal" id="note-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Nueva Nota</h2>
+            <div class="form-group">
+                <label for="note-title">Título</label>
+                <input type="text" id="note-title" placeholder="Título de la nota" required>
+            </div>
+            <div class="form-group">
+                <label for="note-description">Resumen</label>
+                <textarea id="note-description" placeholder="Resumen de la nota"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="note-content">Contenido</label>
+                <textarea id="note-content" placeholder="Contenido completo de la nota"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button id="cancel-note">Cancelar</button>
+                <button id="save-note">Guardar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para seleccionar color -->
+    <div class="modal" id="color-modal">
+        <div class="modal-content">
+            <h2>Seleccionar Color de Fondo</h2>
+            <div class="form-group">
+                <label for="color-picker">Escoge un color</label>
+                <div class="color-picker-container">
+                    <input type="color" id="color-picker" value="#ffffff">
+                    <button id="add-favorite-color" class="btn-success">Favorito</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Colores favoritos</label>
+                <div class="favorite-colors" id="favorite-colors"></div>
+            </div>
+            <div class="modal-buttons">
+                <button id="cancel-color">Cancelar</button>
+                <button id="save-color">Aplicar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Input oculto para cargar JSON -->
+    <input type="file" id="json-file-input" accept=".json" style="display: none;">
+    
+    <div class="notification" id="notification">
+        ¡Acción realizada correctamente!
+    </div>
+
+    <script>
+        // Variables globales
+        let notes = [];
+        let favoriteColors = [];
+        let currentMode = 'default';
+        let defaultData = {};
+        let currentSearchTerm = '';
+        let editingNoteId = null;
+        let colorEditingNoteId = null;
+        let reorderMode = 0; // 0: inactivo, 1: intercambiar, 2: mover detrás
+        let firstSelectedNote = null;
+
+        // Elementos del DOM
+        const notesContainer = document.getElementById('notes-container');
+        const emptyState = document.getElementById('empty-state');
+        const noteModal = document.getElementById('note-modal');
+        const colorModal = document.getElementById('color-modal');
+        const jsonViewer = document.getElementById('json-viewer');
+        const jsonFileInput = document.getElementById('json-file-input');
+        const notification = document.getElementById('notification');
+        const defaultModeBtn = document.getElementById('default-mode');
+        const personalModeBtn = document.getElementById('personal-mode');
+        const editingControls = document.getElementById('editing-controls');
+        const defaultInfo = document.getElementById('default-info');
+        const personalInfo = document.getElementById('personal-info');
+        const jsonSection = document.getElementById('json-section');
+        const downloadDefaultJsonBtn = document.getElementById('download-default-json');
+        const searchInput = document.getElementById('search-input');
+        const colorPicker = document.getElementById('color-picker');
+        const addFavoriteColorBtn = document.getElementById('add-favorite-color');
+        const favoriteColorsContainer = document.getElementById('favorite-colors');
+        const swapInstructions = document.getElementById('swap-instructions');
+        const swapInstructionText = document.getElementById('swap-instruction-text');
+        const cancelSwapBtn = document.getElementById('cancel-swap');
+
+        // Botones de control
+        document.getElementById('add-note-btn').addEventListener('click', () => openNoteModal());
+        document.getElementById('download-json').addEventListener('click', () => downloadJSON());
+        document.getElementById('load-json').addEventListener('click', () => jsonFileInput.click());
+        jsonFileInput.addEventListener('change', (e) => loadJSONFromFile(e));
+        downloadDefaultJsonBtn.addEventListener('click', () => downloadDefaultJSON());
+        document.getElementById('cancel-note').addEventListener('click', () => closeNoteModal());
+        document.getElementById('save-note').addEventListener('click', () => saveNote());
+        document.getElementById('cancel-color').addEventListener('click', () => closeColorModal());
+        document.getElementById('save-color').addEventListener('click', () => saveColor());
+        addFavoriteColorBtn.addEventListener('click', () => addFavoriteColor());
+        cancelSwapBtn.addEventListener('click', () => cancelReorderMode());
+
+        // Botones de modo
+        defaultModeBtn.addEventListener('click', () => switchMode('default'));
+        personalModeBtn.addEventListener('click', () => switchMode('personal'));
+
+        // Evento de búsqueda
+        searchInput.addEventListener('input', (e) => {
+            currentSearchTerm = e.target.value.toLowerCase();
+            renderNotes();
+        });
+
+        // Inicializar la página
+        function init() {
+            loadDefaultData();
+        }
+
+        // Cambiar entre modos
+        function switchMode(mode) {
+            currentMode = mode;
+            defaultModeBtn.classList.toggle('active', mode === 'default');
+            personalModeBtn.classList.toggle('active', mode === 'personal');
+            editingControls.style.display = mode === 'personal' ? 'flex' : 'none';
+            defaultInfo.style.display = mode === 'default' ? 'block' : 'none';
+            personalInfo.style.display = mode === 'personal' ? 'block' : 'none';
+            jsonSection.style.display = mode === 'personal' ? 'block' : 'none';
+            swapInstructions.style.display = 'none';
+            cancelSwapBtn.style.display = 'none';
+            cancelReorderMode();
+            currentSearchTerm = '';
+            searchInput.value = '';
+            if (mode === 'default') {
+                loadDefaultData();
+            } else {
+                loadPersonalData();
+            }
+        }
+
+        // Cargar datos por defecto desde notas.json
+        function loadDefaultData() {
+            emptyState.innerHTML = `
+                <h3>Cargando contenido...</h3>
+                <p>Esperando datos del archivo notas.json</p>
+            `;
+            fetch('https://raw.githubusercontent.com/papelerio/B/refs/heads/main/notas.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('No se pudo cargar el archivo notas.json');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    defaultData = data;
+                    notes = data.notes || [];
+                    favoriteColors = data.favoriteColors || [];
+                    renderNotes();
+                })
+                .catch(error => {
+                    console.error('Error cargando notas.json:', error);
+                    emptyState.innerHTML = `
+                        <h3>Error cargando los datos</h3>
+                        <p>No se pudo cargar el archivo notas.json</p>
+                        <p>${error.message}</p>
+                    `;
+                });
+        }
+
+        // Cargar datos personales desde localStorage
+        function loadPersonalData() {
+            const savedData = localStorage.getItem('notesData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    notes = data.notes || [];
+                    favoriteColors = data.favoriteColors || [];
+                } catch (e) {
+                    console.error("Error parsing saved data:", e);
+                    notes = [];
+                    favoriteColors = [];
+                }
+            } else {
+                notes = [];
+                favoriteColors = [];
+            }
+            renderNotes();
+            updateJSONView();
+        }
+
+        // Renderizar las notas
+        function renderNotes() {
+            notesContainer.innerHTML = '';
+            let filteredNotes = notes.filter(note => 
+                (note.title && note.title.toLowerCase().includes(currentSearchTerm)) ||
+                (note.description && note.description.toLowerCase().includes(currentSearchTerm))
+            );
+
+            if (filteredNotes.length === 0) {
+                emptyState.style.display = 'block';
+                emptyState.innerHTML = currentSearchTerm ? `
+                    <h3>No hay notas que coincidan con "${currentSearchTerm}"</h3>
+                    <p>Intenta con otro término de búsqueda.</p>
+                ` : `
+                    <h3>No hay notas aúnUber</h3>
+                    <p>Haz clic en "Agregar nueva nota" para crear tu primera nota.</p>
+                `;
+                notesContainer.appendChild(emptyState);
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            filteredNotes.forEach(note => {
+                const noteElement = document.createElement('div');
+                noteElement.className = `note-item ${reorderMode > 0 && firstSelectedNote && firstSelectedNote.id === note.id ? (reorderMode === 1 ? 'selected-for-swap' : 'selected-for-insert') : ''}`;
+                noteElement.setAttribute('data-id', note.id);
+                if (note.backgroundColor) {
+                    noteElement.style.backgroundColor = note.backgroundColor;
+                }
+                noteElement.addEventListener('click', (e) => {
+                    if (!e.target.closest('.edit-btn, .delete-btn, .color-btn, .reorder-btn, .copy-btn')) {
+                        noteElement.classList.toggle('expanded');
+                    }
+                });
+                noteElement.innerHTML = `
+                    <div class="note-content">
+                        ${note.title ? `<h3 class="note-title">${note.title}</h3>` : ''}
+                        ${note.description ? `<p class="note-description">${note.description}</p>` : ''}
+                        ${note.content ? `<div class="note-body">${note.content}</div>` : ''}
+                        <div class="edit-delete-buttons">
+                            <button class="copy-btn" data-id="${note.id}" title="Copiar contenido">📋</button>
+                            ${currentMode === 'personal' ? `
+                            <button class="color-btn" data-id="${note.id}" title="Cambiar color">🎨</button>
+                            <button class="reorder-btn ${firstSelectedNote && firstSelectedNote.id === note.id ? 'selected' : ''}" data-id="${note.id}" title="Reordenar">⎆</button>
+                            <button class="edit-btn" data-id="${note.id}">Editar</button>
+                            <button class="delete-btn" data-id="${note.id}">Eliminar</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                notesContainer.appendChild(noteElement);
+            });
+
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const noteId = e.target.getAttribute('data-id');
+                    copyNoteContent(noteId);
+                });
+            });
+
+            if (currentMode === 'personal') {
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const noteId = e.target.getAttribute('data-id');
+                        editNote(noteId);
+                    });
+                });
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const noteId = e.target.getAttribute('data-id');
+                        deleteNote(noteId);
+                    });
+                });
+                document.querySelectorAll('.color-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const noteId = e.target.getAttribute('data-id');
+                        openColorModal(noteId);
+                    });
+                });
+                document.querySelectorAll('.reorder-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const noteId = e.target.getAttribute('data-id');
+                        handleReorderClick(noteId);
+                    });
+                });
+            }
+        }
+
+        // Copiar contenido de la nota
+        function copyNoteContent(noteId) {
+            const note = notes.find(n => n.id === noteId);
+            if (note && note.content) {
+                navigator.clipboard.writeText(note.content)
+                    .then(() => showNotification('Copiado exitosamente'))
+                    .catch(err => showNotification('Error al copiar: ' + err.message));
+            } else {
+                showNotification('No hay contenido para copiar');
+            }
+        }
+
+        // Manejar clic en botón de reordenar
+        function handleReorderClick(noteId) {
+            if (currentMode !== 'personal') return;
+            if (reorderMode === 0) {
+                const note = notes.find(n => n.id === noteId);
+                if (note) {
+                    firstSelectedNote = note;
+                    reorderMode = 1;
+                    swapInstructions.style.display = 'block';
+                    cancelSwapBtn.style.display = 'inline-block';
+                    swapInstructionText.textContent = 'Modo intercambio: Selecciona una segunda nota para intercambiar posiciones';
+                    renderNotes();
+                    showNotification('Selecciona una segunda nota para intercambiar posiciones');
+                }
+            } else if (reorderMode === 1) {
+                if (firstSelectedNote.id === noteId) {
+                    reorderMode = 2;
+                    swapInstructionText.textContent = 'Modo insertar: Selecciona una nota para mover detrás de ella';
+                    showNotification('Modo cambiado a "insertar detrás". Selecciona una nota destino');
+                } else {
+                    const secondNote = notes.find(n => n.id === noteId);
+                    if (secondNote) {
+                        swapNotes(firstSelectedNote, secondNote);
+                        cancelReorderMode();
+                        showNotification('Posiciones intercambiadas correctamente');
+                    }
+                }
+            } else if (reorderMode === 2) {
+                if (firstSelectedNote.id === noteId) {
+                    cancelReorderMode();
+                    showNotification('Reordenamiento cancelado');
+                } else {
+                    const targetNote = notes.find(n => n.id === noteId);
+                    if (targetNote) {
+                        moveNoteBehind(firstSelectedNote, targetNote);
+                        cancelReorderMode();
+                        showNotification('Nota movida correctamente');
+                    }
+                }
+            }
+        }
+
+        // Intercambiar posiciones de dos notas
+        function swapNotes(firstNote, secondNote) {
+            const firstIndex = notes.findIndex(n => n.id === firstNote.id);
+            const secondIndex = notes.findIndex(n => n.id === secondNote.id);
+            if (firstIndex !== -1 && secondIndex !== -1) {
+                [notes[firstIndex], notes[secondIndex]] = [notes[secondIndex], notes[firstIndex]];
+                saveData();
+                renderNotes();
+            }
+        }
+
+        // Mover una nota detrás de otra
+        function moveNoteBehind(noteToMove, targetNote) {
+            const moveIndex = notes.findIndex(n => n.id === noteToMove.id);
+            const targetIndex = notes.findIndex(n => n.id === targetNote.id);
+            if (moveIndex !== -1 && targetIndex !== -1) {
+                const [movedNote] = notes.splice(moveIndex, 1);
+                if (moveIndex > targetIndex) {
+                    notes.splice(targetIndex + 1, 0, movedNote);
+                } else {
+                    notes.splice(targetIndex, 0, movedNote);
+                }
+                saveData();
+                renderNotes();
+            }
+        }
+
+        // Cancelar modo de reordenamiento
+        function cancelReorderMode() {
+            reorderMode = 0;
+            firstSelectedNote = null;
+            swapInstructions.style.display = 'none';
+            cancelSwapBtn.style.display = 'none';
+            renderNotes();
+        }
+
+        // Abrir modal para nueva nota
+        function openNoteModal(note = null) {
+            if (currentMode !== 'personal') return;
+            cancelReorderMode();
+            editingNoteId = note ? note.id : null;
+            document.getElementById('modal-title').textContent = note ? 'Editar Nota' : 'Nueva Nota';
+            document.getElementById('note-title').value = note ? note.title : '';
+            document.getElementById('note-description').value = note ? note.description : '';
+            document.getElementById('note-content').value = note ? note.content : '';
+            noteModal.style.display = 'flex';
+        }
+
+        // Cerrar modal de nota
+        function closeNoteModal() {
+            noteModal.style.display = 'none';
+            editingNoteId = null;
+            document.getElementById('note-title').value = '';
+            document.getElementById('note-description').value = '';
+            document.getElementById('note-content').value = '';
+        }
+
+        // Guardar nota
+        function saveNote() {
+            if (currentMode !== 'personal') return;
+            const title = document.getElementById('note-title').value.trim();
+            const description = document.getElementById('note-description').value.trim();
+            const content = document.getElementById('note-content').value.trim();
+
+            if (!title) {
+                alert('El título es obligatorio.');
+                return;
+            }
+
+            if (editingNoteId) {
+                const index = notes.findIndex(note => note.id === editingNoteId);
+                if (index !== -1) {
+                    notes[index] = {
+                        ...notes[index],
+                        title,
+                        description,
+                        content,
+                        date: new Date().toISOString()
+                    };
+                }
+            } else {
+                const newNote = {
+                    id: Date.now().toString(),
+                    title,
+                    description,
+                    content,
+                    date: new Date().toISOString(),
+                    backgroundColor: '#ffffff'
+                };
+                notes.unshift(newNote);
+            }
+            saveData();
+            renderNotes();
+            closeNoteModal();
+            showNotification('Nota guardada correctamente');
+        }
+
+        // Editar nota
+        function editNote(noteId) {
+            if (currentMode !== 'personal') return;
+            cancelReorderMode();
+            const note = notes.find(n => n.id === noteId);
+            if (note) {
+                openNoteModal(note);
+            }
+        }
+
+        // Eliminar nota
+        function deleteNote(noteId) {
+            if (currentMode !== 'personal') return;
+            cancelReorderMode();
+            if (confirm('¿Estás seguro de que quieres eliminar esta nota?')) {
+                notes = notes.filter(note => note.id !== noteId);
+                saveData();
+                renderNotes();
+                showNotification('Nota eliminada correctamente');
+            }
+        }
+
+        // Abrir modal para seleccionar color
+        function openColorModal(noteId) {
+            if (currentMode !== 'personal') return;
+            cancelReorderMode();
+            colorEditingNoteId = noteId;
+            const note = notes.find(n => n.id === noteId);
+            colorPicker.value = note && note.backgroundColor ? note.backgroundColor : '#ffffff';
+            updateFavoriteColorsUI();
+            colorModal.style.display = 'flex';
+        }
+
+        // Cerrar modal de color
+        function closeColorModal() {
+            colorModal.style.display = 'none';
+            colorEditingNoteId = null;
+        }
+
+        // Añadir color a favoritos
+        function addFavoriteColor() {
+            const color = colorPicker.value;
+            if (!favoriteColors.includes(color)) {
+                favoriteColors.push(color);
+                saveData();
+                updateFavoriteColorsUI();
+                showNotification('Color añadido a favoritos');
+            } else {
+                showNotification('Este color ya está en favoritos');
+            }
+        }
+
+        // Actualizar la UI de colores favoritos
+        function updateFavoriteColorsUI() {
+            favoriteColorsContainer.innerHTML = '';
+            if (favoriteColors.length === 0) {
+                favoriteColorsContainer.innerHTML = '<p>No hay colores favoritos aún.</p>';
+                return;
+            }
+            favoriteColors.forEach(color => {
+                const colorElement = document.createElement('div');
+                colorElement.className = 'favorite-color';
+                colorElement.style.backgroundColor = color;
+                if (color === colorPicker.value) {
+                    colorElement.classList.add('selected');
+                }
+                const removeBtn = document.createElement('span');
+                removeBtn.className = 'remove-favorite';
+                removeBtn.textContent = '×';
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeFavoriteColor(color);
+                });
+                colorElement.addEventListener('click', () => {
+                    colorPicker.value = color;
+                    updateFavoriteColorsUI();
+                });
+                colorElement.appendChild(removeBtn);
+                favoriteColorsContainer.appendChild(colorElement);
+            });
+        }
+
+        // Eliminar color favorito
+        function removeFavoriteColor(color) {
+            favoriteColors = favoriteColors.filter(c => c !== color);
+            saveData();
+            updateFavoriteColorsUI();
+            showNotification('Color eliminado de favoritos');
+        }
+
+        // Guardar color seleccionado
+        function saveColor() {
+            if (currentMode !== 'personal') return;
+            const color = colorPicker.value;
+            if (colorEditingNoteId) {
+                const index = notes.findIndex(note => note.id === colorEditingNoteId);
+                if (index !== -1) {
+                    notes[index].backgroundColor = color;
+                    saveData();
+                    renderNotes();
+                    closeColorModal();
+                    showNotification('Color aplicado correctamente');
+                }
+            }
+        }
+
+        // Guardar datos en localStorage
+        function saveData() {
+            if (currentMode !== 'personal') return;
+            const data = {
+                notes,
+                favoriteColors
+            };
+            localStorage.setItem('notesData', JSON.stringify(data));
+            updateJSONView();
+        }
+
+        // Actualizar la vista del JSON
+        function updateJSONView() {
+            const data = {
+                notes,
+                favoriteColors
+            };
+            jsonViewer.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Descargar JSON personal
+        function downloadJSON() {
+            if (currentMode !== 'personal') return;
+            cancelReorderMode();
+            const data = {
+                notes,
+                favoriteColors
+            };
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'notes-data-personal.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('JSON personal descargado correctamente');
+        }
+
+        // Descargar JSON por defecto
+        function downloadDefaultJSON() {
+            const jsonString = JSON.stringify(defaultData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'notas.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('JSON por defecto descargado correctamente');
+        }
+
+        // Cargar JSON desde archivo
+        function loadJSONFromFile(event) {
+            if (currentMode !== 'personal') return;
+            cancelReorderMode();
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.notes) {
+                        notes = data.notes;
+                        favoriteColors = data.favoriteColors || [];
+                        saveData();
+                        renderNotes();
+                        showNotification('Datos cargados correctamente desde el JSON');
+                    } else {
+                        alert('El archivo JSON no tiene el formato correcto.');
+                    }
+                } catch (error) {
+                    alert('Error al parsear el archivo JSON: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Mostrar notificación
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Inicializar la aplicación
+        init();
+    </script>
+</body>
+</html>

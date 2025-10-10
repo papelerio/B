@@ -1732,7 +1732,7 @@
             overlay.classList.toggle('open');
         }
 
-        // Export JSON - VERSIÓN CORREGIDA PARA ANDROID
+        // Export JSON - MODIFIED FOR ANDROID
         function exportJSON() {
             const data = { 
                 folders, 
@@ -1741,28 +1741,35 @@
                 timestamp: new Date().toISOString()
             };
             const jsonString = JSON.stringify(data, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
             
-            // Crear URL del blob
-            const url = URL.createObjectURL(blob);
+            // Detectar si es Android
+            const isAndroid = /Android/i.test(navigator.userAgent);
             
-            // Crear elemento de enlace temporal
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'portapapeles.json';
-            a.style.display = 'none';
-            
-            // Añadir al documento y hacer click
-            document.body.appendChild(a);
-            a.click();
-            
-            // Limpiar
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }, 100);
-            
-            toggleSidebar();
+            if (isAndroid) {
+                // En Android, copiar al portapapeles
+                navigator.clipboard.writeText(jsonString).then(() => {
+                    alert('JSON copiado al portapapeles');
+                    toggleSidebar();
+                }).catch(err => {
+                    alert('Error al copiar JSON al portapapeles');
+                    toggleSidebar();
+                });
+            } else {
+                // En otros dispositivos, descargar archivo
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'portapapeles.json';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                toggleSidebar();
+            }
         }
 
         // Import JSON - VERSIÓN CORREGIDA

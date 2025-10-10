@@ -7,7 +7,14 @@
     "Programador"
   ],
   "notes": {
-    "portapapeles": [],
+    "portapapeles": [
+      {
+        "title": "xd",
+        "summary": "",
+        "content": "xd",
+        "date": "2025-10-10T12:21:29.983Z"
+      }
+    ],
     "PixAI": [
       {
         "title": "Misha limpia",
@@ -184,7 +191,14 @@
         "date": "2025-10-10T01:22:52.796Z"
       }
     ],
-    "Grok": [],
+    "Grok": [
+      {
+        "title": "A",
+        "summary": "",
+        "content": "A",
+        "date": "2025-10-10T12:21:24.295Z"
+      }
+    ],
     "Uni": [
       {
         "title": "concepto de nose",
@@ -197,9 +211,11 @@
       {
         "title": "codigos para programador",
         "summary": "codigos para programador",
-        "content": "🍊 highlight = aura azul de seleccion\n🍊 Multitouch = para multiples botones en un dispositivo\n🍊 toggle = tickeable o palanca\n🍊 color picker = paleta de color\n🍊 slider (range) = barra deslisadora 0-100%\n🍊 Dropdown = menu desplegable\n\n+ \"pull-to-refresh\" (deslizar hacia abajo para recargar) en móviles",
-        "date": "2025-10-10T03:29:12.715Z"
+        "content": "🍊 highlight = aura azul de seleccion\n🍊 Multitouch = para multiples botones en un dispositivo\n🍊 toggle = tickeable o palanca\n🍊 color picker = paleta de color\n🍊 slider (range) = barra deslisadora 0-100%\n🍊 Dropdown = menu desplegable\n\n+ Umbrales diferenciados:\n\nverticalScrollThreshold = 10px para detectar scroll vertical\n\nswipeThreshold = 50px para detectar swipe horizontal",
+        "date": "2025-10-10T12:20:32.519Z"
       }
     ]
-  }
+  },
+  "currentFolder": "Programador",
+  "timestamp": "2025-10-10T12:21:34.535Z"
 }

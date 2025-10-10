@@ -197,8 +197,8 @@
       {
         "title": "codigos para programador",
         "summary": "codigos para programador",
-        "content": "🍊 highlight = aura azul de seleccion\n🍊 Multitouch = para multiples botones en un dispositivo\n🍊 toggle = tickeable o palanca\n🍊 color picker = paleta de color\n🍊 slider (range) = barra deslisadora 0-100%\n🍊 Dropdown = menu desplegable",
-        "date": "2025-10-10T01:14:48.524Z"
+        "content": "🍊 highlight = aura azul de seleccion\n🍊 Multitouch = para multiples botones en un dispositivo\n🍊 toggle = tickeable o palanca\n🍊 color picker = paleta de color\n🍊 slider (range) = barra deslisadora 0-100%\n🍊 Dropdown = menu desplegable\n\n+ \"pull-to-refresh\" (deslizar hacia abajo para recargar) en móviles",
+        "date": "2025-10-10T03:29:12.715Z"
       }
     ]
   }

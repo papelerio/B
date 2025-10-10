@@ -5,91 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Administrador del Portapapeles</title>
     <style>
-        /* Prevenir pull-to-refresh */
+        /* Prevenir pull-to-refresh y mejorar rendimiento */
         body {
             overscroll-behavior-y: contain;
             overflow: hidden;
             height: 100vh;
             position: fixed;
             width: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
         }
 
         html {
             overscroll-behavior-y: contain;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes bounceIn {
-            0% { opacity: 0; transform: scale(0.3); }
-            50% { opacity: 1; transform: scale(1.05); }
-            70% { transform: scale(0.9); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-
-        @keyframes glow {
-            0% { box-shadow: 0 0 5px rgba(0, 122, 255, 0.5); }
-            50% { box-shadow: 0 0 20px rgba(0, 122, 255, 0.8); }
-            100% { box-shadow: 0 0 5px rgba(0, 122, 255, 0.5); }
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes typewriter {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes ripple {
-            0% { transform: scale(0); opacity: 1; }
-            100% { transform: scale(4); opacity: 0; }
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #000000 0%, #1a1a2e 50%, #16213e 100%);
-            color: #fff;
-            overflow-x: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            animation: fadeIn 0.8s ease-out;
-            -webkit-overflow-scrolling: touch;
+            background: #000;
         }
 
         /* Top navigation */
@@ -98,19 +32,14 @@
             justify-content: space-between;
             align-items: center;
             padding: 16px;
-            background: rgba(0, 0, 0, 0.8);
+            background: #000;
             border-bottom: 1px solid #333;
-            backdrop-filter: blur(10px);
-            animation: slideInLeft 0.6s ease-out;
         }
 
         .title {
             font-size: 18px;
             font-weight: bold;
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: glow 2s infinite;
+            color: #007AFF;
         }
 
         .menu-btn {
@@ -120,13 +49,6 @@
             border: none;
             color: #fff;
             cursor: pointer;
-            transition: all 0.3s ease;
-            animation: bounceIn 0.8s ease-out;
-        }
-
-        .menu-btn:hover {
-            transform: scale(1.2);
-            color: #007AFF;
         }
 
         .search-btn {
@@ -137,19 +59,11 @@
             color: #fff;
             cursor: pointer;
             position: relative;
-            transition: all 0.3s ease;
-            animation: bounceIn 0.8s ease-out 0.1s both;
         }
 
         .search-btn::after {
             content: '🔍';
             font-size: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .search-btn:hover::after {
-            transform: scale(1.3);
-            filter: brightness(1.5);
         }
 
         /* Sidebar */
@@ -159,17 +73,15 @@
             left: -300px;
             width: 300px;
             height: 100vh;
-            background: linear-gradient(180deg, #111 0%, #222 100%);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #111;
+            transition: left 0.3s ease;
             z-index: 1000;
             padding: 80px 16px 16px;
             box-sizing: border-box;
-            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
         }
 
         .sidebar.open {
             left: 0;
-            animation: slideInLeft 0.4s ease-out;
         }
 
         .close-btn {
@@ -178,20 +90,13 @@
             right: 16px;
             width: 32px;
             height: 32px;
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
+            background: #007AFF;
             color: #fff;
             border: none;
             border-radius: 50%;
             font-size: 18px;
             cursor: pointer;
             display: none;
-            transition: all 0.3s ease;
-            animation: bounceIn 0.6s ease-out;
-        }
-
-        .close-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(0, 122, 255, 0.6);
         }
 
         .sidebar.open .close-btn {
@@ -204,10 +109,9 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.5);
             z-index: 999;
             display: none;
-            animation: fadeIn 0.3s ease-out;
         }
 
         .sidebar.open + .sidebar-overlay {
@@ -217,66 +121,31 @@
         .sidebar-btn {
             display: block;
             width: 100%;
-            padding: 15px;
-            margin-bottom: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            margin-bottom: 8px;
+            background: none;
+            border: 1px solid #333;
             color: #fff;
             text-align: left;
             cursor: pointer;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            animation: slideUp 0.5s ease-out;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .sidebar-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .sidebar-btn:hover::before {
-            left: 100%;
-        }
-
-        .sidebar-btn:hover {
-            transform: translateX(10px) scale(1.02);
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #007AFF;
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+            border-radius: 4px;
         }
 
         .cloud-btn {
-            background: linear-gradient(45deg, #FFD700, #FFA500) !important;
+            background: #FFD700 !important;
             color: #000 !important;
             font-weight: bold;
-            animation: pulse 2s infinite;
-        }
-
-        .cloud-btn:hover {
-            animation: none;
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
         }
 
         /* Folders tabs */
         .folders {
             display: flex;
             overflow-x: auto;
-            padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 16px;
+            background: #000;
             border-bottom: 1px solid #333;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            animation: slideUp 0.6s ease-out 0.2s both;
         }
 
         .folders::-webkit-scrollbar {
@@ -285,45 +154,18 @@
 
         .folder-tab {
             flex: 0 0 auto;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #222 0%, #333 100%);
+            padding: 8px 16px;
+            background: #222;
             color: #fff;
             border: none;
-            margin-right: 8px;
-            border-radius: 20px;
+            margin-right: 4px;
+            border-radius: 16px;
             cursor: pointer;
             white-space: nowrap;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .folder-tab::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 3px;
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
-            transition: width 0.3s ease;
-        }
-
-        .folder-tab:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
-        }
-
-        .folder-tab:hover::after {
-            width: 100%;
         }
 
         .folder-tab.active {
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(0, 122, 255, 0.5);
-            animation: pulse 2s infinite;
+            background: #007AFF;
         }
 
         /* Notes list */
@@ -331,154 +173,110 @@
             flex: 1;
             padding: 16px;
             overflow-y: auto;
-            animation: fadeIn 0.8s ease-out 0.3s both;
+            background: #000;
+            transition: transform 0.3s ease;
+            touch-action: pan-y; /* Permitir scroll vertical */
         }
 
         .note {
-            background: linear-gradient(135deg, rgba(17, 17, 17, 0.9) 0%, rgba(34, 34, 34, 0.9) 100%);
+            background: #111;
             margin-bottom: 16px;
-            padding: 20px;
-            border-radius: 16px;
-            border-left: 6px solid #007AFF;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #007AFF;
             cursor: pointer;
             position: relative;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-            animation: slideUp 0.5s ease-out;
-            overflow: hidden;
-        }
-
-        .note::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.6s;
-        }
-
-        .note:hover::before {
-            left: 100%;
+            transition: transform 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease, margin-bottom 0.3s ease;
         }
 
         .note:hover {
-            transform: translateY(-5px) scale(1.02);
-            border-left: 6px solid #00D4FF;
-            box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3);
-            background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(50, 50, 50, 0.9) 100%);
+            background: #222;
+        }
+
+        .note.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            z-index: 100;
+            position: relative;
+        }
+
+        .note-placeholder {
+            background: #222;
+            height: 80px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            border: 2px dashed #007AFF;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
         }
 
         .note-content-section {
             flex: 1;
-            animation: fadeIn 0.6s ease-out;
         }
 
         .note-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            margin-bottom: 10px;
-            /* Corregido: mostrar emojis correctamente */
+            margin-bottom: 8px;
             color: #fff;
-            animation: typewriter 0.8s ease-out;
         }
 
         .note-content {
             font-size: 14px;
             color: #ccc;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             line-height: 1.4;
-            animation: fadeIn 0.6s ease-out 0.2s both;
         }
 
         .note-date {
             font-size: 12px;
             color: #888;
-            animation: fadeIn 0.6s ease-out 0.4s both;
         }
 
         .note-buttons-section {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
-            animation: slideInRight 0.6s ease-out;
         }
 
         .reorder-btn {
-            background: linear-gradient(45deg, #FFD700, #FFA500);
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
+            background: #FFD700;
+            border-radius: 20px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            cursor: grab;
             border: none;
             color: #000;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            animation: bounceIn 0.6s ease-out;
+            touch-action: none;
         }
 
-        .reorder-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s ease;
-        }
-
-        .reorder-btn:hover::after {
-            width: 100%;
-            height: 100%;
-        }
-
-        .reorder-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.6);
-            animation: float 2s infinite;
+        .reorder-btn:active {
+            cursor: grabbing;
         }
 
         .note-menu-section {
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
+            background: #007AFF;
+            border-radius: 20px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            animation: bounceIn 0.6s ease-out 0.1s both;
-        }
-
-        .note-menu-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
-        }
-
-        .note-menu-section:hover::before {
-            left: 100%;
         }
 
         .note-menu-btn {
@@ -489,16 +287,6 @@
             cursor: pointer;
             padding: 0;
             margin: 0;
-            transition: all 0.3s ease;
-        }
-
-        .note-menu-section:hover {
-            transform: scale(1.1);
-            box-shadow: 0 5px 20px rgba(0, 122, 255, 0.6);
-        }
-
-        .note-menu-section:hover .note-menu-btn {
-            transform: scale(1.2);
         }
 
         .note-buttons {
@@ -507,85 +295,30 @@
         }
 
         .note-btn {
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
+            background: #007AFF;
             color: #fff;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 12px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .note-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
-        }
-
-        .note-btn:hover::before {
-            left: 100%;
-        }
-
-        .note-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.4);
         }
 
         /* Add button */
         .add-btn {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: #007AFF;
             color: #fff;
             border: none;
             border-radius: 50%;
-            font-size: 28px;
+            font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.4);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
             z-index: 100;
-            animation: bounceIn 1s ease-out, float 3s infinite;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .add-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: all 0.3s ease;
-        }
-
-        .add-btn:hover::before {
-            width: 100%;
-            height: 100%;
-        }
-
-        .add-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 12px 35px rgba(0, 122, 255, 0.6);
-            animation: none;
-        }
-
-        .add-btn:active {
-            transform: scale(0.95);
         }
 
         /* Modal */
@@ -595,10 +328,9 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.8);
             display: none;
             z-index: 2000;
-            animation: fadeIn 0.3s ease-out;
         }
 
         .modal.open {
@@ -606,7 +338,7 @@
         }
 
         .modal-content {
-            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            background: #000;
             width: 100%;
             height: 100%;
             padding: 20px;
@@ -614,8 +346,6 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
         }
 
         .modal-header, .view-header {
@@ -624,112 +354,49 @@
             align-items: center;
             margin-bottom: 20px;
             flex-shrink: 0;
-            animation: slideInLeft 0.5s ease-out;
         }
 
         .modal-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: typewriter 0.8s ease-out;
+            color: #007AFF;
         }
 
         .modal-close, .back-btn {
             background: none;
             border: none;
             color: #fff;
-            font-size: 28px;
+            font-size: 24px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            animation: bounceIn 0.6s ease-out;
-        }
-
-        .modal-close:hover, .back-btn:hover {
-            transform: scale(1.2);
-            color: #007AFF;
         }
 
         .back-btn {
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .modal-save {
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
+            background: #007AFF;
             color: #fff;
             border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            animation: slideInRight 0.5s ease-out;
-        }
-
-        .modal-save::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
-        }
-
-        .modal-save:hover::before {
-            left: 100%;
-        }
-
-        .modal-save:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.5);
         }
 
         .view-buttons {
             display: flex;
-            gap: 12px;
-            animation: slideInRight 0.5s ease-out;
+            gap: 10px;
         }
 
         .view-btn {
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
+            background: #007AFF;
             color: #fff;
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .view-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.5s;
-        }
-
-        .view-btn:hover::before {
-            left: 100%;
-        }
-
-        .view-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(0, 122, 255, 0.4);
-        }
-
-        .view-btn.copy-success {
-            animation: glow 1s ease-out, bounceIn 0.6s ease-out;
         }
 
         .form-section {
@@ -737,53 +404,40 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            animation: fadeIn 0.6s ease-out 0.2s both;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             flex-shrink: 0;
-            animation: slideUp 0.5s ease-out;
         }
 
         .form-group.content-group {
             flex: 1;
             display: flex;
             flex-direction: column;
-            margin-bottom: 20px;
-            animation: slideUp 0.5s ease-out 0.3s both;
+            margin-bottom: 16px;
         }
 
         .form-label {
             display: block;
             font-size: 14px;
             color: #888;
-            margin-bottom: 8px;
-            animation: fadeIn 0.6s ease-out;
+            margin-bottom: 4px;
         }
 
         .form-input, .form-textarea {
             width: 100%;
-            background: rgba(17, 17, 17, 0.8);
-            border: 2px solid #333;
+            background: #111;
+            border: 1px solid #333;
             color: #fff;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 8px;
             box-sizing: border-box;
             font-size: 16px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            animation: fadeIn 0.6s ease-out 0.1s both;
-        }
-
-        .form-input:focus, .form-textarea:focus {
-            border-color: #007AFF;
-            box-shadow: 0 0 20px rgba(0, 122, 255, 0.3);
-            transform: scale(1.02);
         }
 
         .form-input {
-            height: 50px;
+            height: 40px;
         }
 
         .form-textarea {
@@ -797,38 +451,28 @@
             text-align: right;
             font-size: 12px;
             color: #888;
-            margin-top: 8px;
-            animation: fadeIn 0.6s ease-out 0.4s both;
+            margin-top: 4px;
         }
 
         .folder-select {
             position: relative;
-            animation: fadeIn 0.6s ease-out 0.3s both;
         }
 
         .folder-select select {
             width: 100%;
-            background: rgba(17, 17, 17, 0.8);
-            border: 2px solid #333;
+            background: #111;
+            border: 1px solid #333;
             color: #fff;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 8px;
             font-size: 16px;
             appearance: none;
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 15px center;
+            background-position: right 12px center;
             background-repeat: no-repeat;
             background-size: 16px;
-            padding-right: 50px;
-            height: 50px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .folder-select select:focus {
-            border-color: #007AFF;
-            box-shadow: 0 0 20px rgba(0, 122, 255, 0.3);
-            transform: scale(1.02);
+            padding-right: 40px;
+            height: 40px;
         }
 
         .folder-select select:disabled {
@@ -839,119 +483,79 @@
         /* Search Modal */
         #search-modal .search-input {
             width: 100%;
-            background: rgba(17, 17, 17, 0.8);
-            border: 2px solid #333;
+            background: #111;
+            border: 1px solid #333;
             color: #fff;
-            padding: 15px;
-            border-radius: 25px;
+            padding: 12px;
+            border-radius: 8px;
             font-size: 16px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            animation: slideUp 0.5s ease-out;
-        }
-
-        #search-modal .search-input:focus {
-            border-color: #007AFF;
-            box-shadow: 0 0 25px rgba(0, 122, 255, 0.4);
-            transform: scale(1.02);
+            margin-bottom: 16px;
         }
 
         /* View Note Modal */
         #view-modal .modal-content {
-            padding: 25px;
+            padding: 20px;
             overflow-y: auto;
-            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .note-view-title {
-            font-size: 22px;
+            font-size: 18px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             word-break: break-word;
-            /* Corregido: mostrar emojis correctamente */
             color: #fff;
-            animation: typewriter 1s ease-out;
         }
 
         .note-view-summary {
-            font-size: 16px;
+            font-size: 14px;
             color: #ccc;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: rgba(17, 17, 17, 0.8);
-            border-radius: 12px;
+            margin-bottom: 16px;
+            padding: 8px;
+            background: #111;
+            border-radius: 4px;
             display: none;
-            animation: slideUp 0.5s ease-out 0.2s both;
-            backdrop-filter: blur(10px);
         }
 
         .note-view-content {
             font-size: 16px;
-            line-height: 1.6;
+            line-height: 1.5;
             white-space: pre-wrap;
             word-break: break-word;
-            animation: fadeIn 0.8s ease-out 0.3s both;
         }
 
         .note-view-date {
-            font-size: 14px;
+            font-size: 12px;
             color: #888;
-            margin-top: 20px;
-            animation: fadeIn 0.8s ease-out 0.4s both;
+            margin-top: 16px;
         }
 
         /* Dropdown Menu */
         .dropdown-menu {
             display: none;
             position: fixed;
-            background: linear-gradient(135deg, #111 0%, #222 100%);
+            background: #111;
             border: 1px solid #333;
-            border-radius: 16px;
-            padding: 8px 0;
+            border-radius: 8px;
+            padding: 0;
             z-index: 3000;
-            transform: scale(0);
-            transform-origin: top right;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            width: 180px;
-            backdrop-filter: blur(10px);
-            animation: bounceIn 0.4s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            width: 150px;
         }
 
         .dropdown-btn {
             display: block;
             width: 100%;
-            padding: 15px 20px;
+            padding: 12px 16px;
             background: none;
             border: none;
             text-align: left;
             color: #fff;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dropdown-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.3s;
-        }
-
-        .dropdown-btn:hover::before {
-            left: 100%;
         }
 
         .dropdown-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
+            background: #222;
         }
 
         .delete-btn {
@@ -966,149 +570,71 @@
         /* Confirm Modal */
         .confirm-modal-content {
             text-align: center;
-            max-width: 350px;
+            max-width: 300px;
             margin: auto;
-            animation: bounceIn 0.6s ease-out;
         }
 
         .confirm-text {
-            margin-bottom: 25px;
-            font-size: 18px;
-            animation: typewriter 0.8s ease-out;
+            margin-bottom: 20px;
+            font-size: 16px;
         }
 
         .confirm-buttons {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
-            animation: slideUp 0.5s ease-out 0.2s both;
         }
 
         .confirm-btn {
-            padding: 12px 24px;
-            border-radius: 25px;
+            padding: 8px 16px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
             border: none;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .confirm-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.3s;
-        }
-
-        .confirm-btn:hover::before {
-            left: 100%;
         }
 
         .confirm-yes {
-            background: linear-gradient(45deg, #FF3B30, #FF6B6B);
+            background: #FF3B30;
             color: #fff;
-        }
-
-        .confirm-yes:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 59, 48, 0.4);
         }
 
         .confirm-no {
-            background: linear-gradient(45deg, #333, #555);
+            background: #333;
             color: #fff;
         }
 
-        .confirm-no:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(51, 51, 51, 0.4);
-        }
-
         /* Estilos para el modo de reorganización */
-        .note.dragging {
-            background: linear-gradient(135deg, rgba(51, 51, 51, 0.9) 0%, rgba(85, 85, 85, 0.9) 100%) !important;
-            border-left: 6px solid #FFD700 !important;
-            opacity: 0.9;
-            transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.5);
-            animation: pulse 1.5s infinite;
-        }
-
-        .note.drop-target {
-            background: rgba(26, 26, 26, 0.9) !important;
-            border: 3px dashed #FFD700 !important;
-            animation: glow 1s infinite;
-        }
-
         .reorder-instructions {
             text-align: center;
-            padding: 15px;
-            background: linear-gradient(45deg, #222, #333);
+            padding: 10px;
+            background: #222;
             color: #FFD700;
-            font-size: 16px;
-            display: none;
-            border-radius: 0 0 20px 20px;
-            animation: slideUp 0.5s ease-out;
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
-        }
-
-        .reorder-mode .reorder-instructions {
-            display: block;
-        }
-
-        .reorder-mode .note {
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .reorder-mode .note-buttons-section {
+            font-size: 14px;
             display: none;
         }
 
         .search-note-folder {
             font-size: 12px;
             color: #888;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             font-style: italic;
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        /* Ripple effect */
-        .ripple {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            transform: scale(0);
-            animation: ripple 0.6s linear;
-            pointer-events: none;
         }
 
         /* Hide scrollbars */
         *::-webkit-scrollbar {
-            width: 8px;
+            width: 4px;
         }
 
         *::-webkit-scrollbar-track {
-            background: rgba(17, 17, 17, 0.8);
-            border-radius: 10px;
+            background: #111;
         }
 
         *::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #007AFF, #00D4FF);
-            border-radius: 10px;
+            background: #333;
+            border-radius: 2px;
         }
 
-        *::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(45deg, #00D4FF, #007AFF);
-        }
-
-        /* Loading animation */
+        /* Loading animation simple */
         .loading {
             display: inline-block;
             width: 20px;
@@ -1156,11 +682,6 @@
         <!-- Folders will be populated by JS -->
     </div>
 
-    <!-- Instructions for reordering -->
-    <div class="reorder-instructions" id="reorder-instructions">
-        Modo reorganización: Haz clic en la nota destino para mover la nota seleccionada
-    </div>
-
     <!-- Notes list -->
     <div class="notes-list" id="notes-list">
         <!-- Notes will be populated by JS -->
@@ -1180,7 +701,7 @@
     <div class="modal" id="add-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="modal-close" onclick="handleBackAction()">×</button>
+                <button class="modal-close" onclick="closeModal()">×</button>
                 <div class="modal-title" id="modal-title">Nueva nota *</div>
                 <button class="modal-save" onclick="saveNote()">GUARDAR</button>
             </div>
@@ -1214,7 +735,7 @@
     <div class="modal" id="search-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="modal-close" onclick="handleBackAction()">×</button>
+                <button class="modal-close" onclick="closeSearchModal()">×</button>
                 <div class="modal-title">Buscar notas</div>
             </div>
             <input type="text" class="search-input" id="search-input" placeholder="Buscar por título..." oninput="filterSearch()">
@@ -1228,7 +749,7 @@
     <div class="modal" id="add-folder-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="modal-close" onclick="handleBackAction()">×</button>
+                <button class="modal-close" onclick="closeAddFolderModal()">×</button>
                 <div class="modal-title">Nueva Carpeta</div>
                 <button class="modal-save" onclick="saveNewFolder()">GUARDAR</button>
             </div>
@@ -1245,9 +766,9 @@
     <div class="modal" id="delete-folder-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <button class="modal-close" onclick="handleBackAction()">×</button>
+                <button class="modal-close" onclick="closeDeleteFolderModal()">×</button>
                 <div class="modal-title">Eliminar Carpeta</div>
-                <button class="modal-save" onclick="showDeleteFolderConfirm()" style="background: linear-gradient(45deg, #FF3B30, #FF6B6B);">ELIMINAR</button>
+                <button class="modal-save" onclick="showDeleteFolderConfirm()" style="background: #FF3B30;">ELIMINAR</button>
             </div>
             <div class="form-section">
                 <div class="form-group">
@@ -1268,7 +789,7 @@
         <div class="modal-content confirm-modal-content">
             <div class="confirm-text" id="confirm-text">¿Estás seguro?</div>
             <div class="confirm-buttons">
-                <button class="confirm-btn confirm-no" onclick="handleBackAction()">Cancelar</button>
+                <button class="confirm-btn confirm-no" onclick="closeConfirmModal()">Cancelar</button>
                 <button class="confirm-btn confirm-yes" id="confirm-yes-btn">Eliminar</button>
             </div>
         </div>
@@ -1278,7 +799,7 @@
     <div class="modal" id="view-modal">
         <div class="modal-content">
             <div class="view-header">
-                <button class="back-btn" onclick="handleBackAction()">Atrás</button>
+                <button class="back-btn" onclick="closeViewModal()">Atrás</button>
                 <div class="view-buttons">
                     <button id="copy-view-btn" class="view-btn" onclick="copyFromView()">Copiar</button>
                     <button class="view-btn" onclick="editFromView()">Editar</button>
@@ -1309,25 +830,29 @@
         let searchMode = 'current'; // 'current' or 'all'
         let searchQuery = '';
 
-        // Variables para reorganización
-        let isReorderMode = false;
-        let noteToMove = null;
+        // Variables para drag-and-drop
+        let dragNoteIndex = null;
+        let dragPlaceholder = null;
+        let dragStartY = 0;
+        let currentDragY = 0;
+        let autoScrollInterval = null;
+
+        // Variables para swipe entre carpetas
+        let swipeStartX = 0;
+        let swipeCurrentX = 0;
+        let isSwiping = false;
 
         // Stack para manejar el historial de navegación
         let navigationStack = ['main']; // Comienza en la vista principal
 
-        // Sistema de navegación con botón back
-        function handleBackAction() {
+        // App back action (for buttons in app, never exit)
+        function appHandleBack() {
             if (navigationStack.length > 1) {
-                // Remover la vista actual del stack
                 navigationStack.pop();
-                // Obtener la vista anterior
                 const previousView = navigationStack[navigationStack.length - 1];
                 
-                // Cerrar todos los modales primero
                 closeAllModals();
                 
-                // Navegar a la vista anterior
                 switch(previousView) {
                     case 'main':
                         // Ya estamos en la vista principal
@@ -1349,11 +874,24 @@
                     case 'delete-folder-modal':
                         showDeleteFolderModal();
                         break;
+                    case 'confirm-modal':
+                        // For confirm, just close it without re-opening
+                        document.getElementById('confirm-modal').classList.remove('open');
+                        navigationStack.pop(); // Extra pop if needed
+                        break;
                 }
+            } // else do nothing (in main)
+        }
+
+        // System back action (for phone back, show exit confirm when in main)
+        function handleBackAction() {
+            if (navigationStack.length > 1) {
+                appHandleBack();
             } else {
                 // Si no hay más vistas en el stack, salir de la app
                 if (confirm('¿Deseas salir de la aplicación?')) {
-                    window.close(); // Esto puede no funcionar en todos los navegadores
+                    // Para PWA, puedes usar window.close() o simplemente no hacer nada
+                    // ya que en móvil no se puede cerrar la app desde JS
                 }
             }
         }
@@ -1366,7 +904,7 @@
             }
         }
 
-        // Cerrar todos los modales
+        // Cerrar todos los modals
         function closeAllModals() {
             const modals = document.querySelectorAll('.modal');
             modals.forEach(modal => {
@@ -1379,7 +917,7 @@
             overlay.classList.remove('open');
         }
 
-        // Prevenir pull-to-refresh
+        // Prevenir pull-to-refresh y manejar touch events
         document.addEventListener('touchmove', function(e) {
             if (e.touches.length > 1) {
                 return; // Permitir zoom
@@ -1405,34 +943,6 @@
         // Inicializar el estado de navegación
         history.replaceState(null, null, window.location.href);
         history.pushState(null, null, window.location.href);
-
-        // Ripple effect function
-        function createRipple(event) {
-            const button = event.currentTarget;
-            const circle = document.createElement("span");
-            const diameter = Math.max(button.clientWidth, button.clientHeight);
-            const radius = diameter / 2;
-
-            circle.style.width = circle.style.height = `${diameter}px`;
-            circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
-            circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
-            circle.classList.add("ripple");
-
-            const ripple = button.getElementsByClassName("ripple")[0];
-            if (ripple) {
-                ripple.remove();
-            }
-
-            button.appendChild(circle);
-        }
-
-        // Add ripple effect to buttons
-        document.addEventListener('DOMContentLoaded', function() {
-            const buttons = document.querySelectorAll('button');
-            buttons.forEach(button => {
-                button.addEventListener('click', createRipple);
-            });
-        });
 
         // Load from localStorage
         function loadFromStorage() {
@@ -1490,11 +1000,29 @@
             ).join('');
         }
 
-        // Switch folder
-        function switchFolder(folder) {
-            currentFolder = folder;
-            renderFolders();
-            renderNotes();
+        // Switch folder with animation
+        function switchFolder(folder, direction = null) {
+            const notesList = document.getElementById('notes-list');
+            if (direction) {
+                notesList.style.transition = 'transform 0.3s ease';
+                const translateFrom = direction === 'left' ? '100%' : '-100%';
+                const translateTo = direction === 'left' ? '-100%' : '100%';
+                notesList.style.transform = `translateX(${translateTo})`;
+                setTimeout(() => {
+                    currentFolder = folder;
+                    renderFolders();
+                    renderNotes();
+                    notesList.style.transition = 'none';
+                    notesList.style.transform = `translateX(${translateFrom})`;
+                    void notesList.offsetWidth; // Reflow
+                    notesList.style.transition = 'transform 0.3s ease';
+                    notesList.style.transform = 'translateX(0)';
+                }, 300);
+            } else {
+                currentFolder = folder;
+                renderFolders();
+                renderNotes();
+            }
             saveToStorage();
         }
 
@@ -1504,14 +1032,14 @@
             const folderNotes = notes[currentFolder] || [];
             
             notesList.innerHTML = folderNotes.map((note, i) => `
-                <div class="note" onclick="handleNoteClick(${i}, event)">
+                <div class="note" data-index="${i}" onclick="handleNoteClick(${i}, event)">
                     <div class="note-content-section">
                         <div class="note-title">${escapeHtml(note.title)}</div>
                         <div class="note-content">${escapeHtml(note.content.substring(0, 50) + (note.content.length > 50 ? '...' : ''))}</div>
                         <div class="note-date">${formatDate(note.date)}</div>
                     </div>
                     <div class="note-buttons-section">
-                        <button class="reorder-btn" onclick="activateReorderMode(${i}); event.stopPropagation();" title="Mover nota">↕</button>
+                        <button class="reorder-btn" onpointerdown="startDrag(${i}, event)" title="Mover nota">↕</button>
                         <div class="note-menu-section" onclick="showNoteMenu(${i}, event); event.stopPropagation();">
                             <button class="note-menu-btn">⋮</button>
                         </div>
@@ -1522,71 +1050,168 @@
 
         // Handle note click
         function handleNoteClick(index, event) {
-            if (isReorderMode) {
-                event.preventDefault();
-                event.stopPropagation();
-                
-                if (noteToMove !== null && noteToMove !== index) {
-                    moveNoteToPosition(noteToMove, index);
-                }
-                deactivateReorderMode();
-            } else {
-                // Comportamiento normal
+            if (dragNoteIndex === null && !isSwiping) {
                 viewNote(index);
             }
         }
 
-        // Activate reorder mode
-        function activateReorderMode(index) {
-            isReorderMode = true;
-            noteToMove = index;
-            
-            // Aplicar estilos de modo reorganización
-            document.body.classList.add('reorder-mode');
-            
-            // Resaltar la nota seleccionada
-            const noteElements = document.querySelectorAll('.note');
-            noteElements.forEach((note, i) => {
-                if (i === index) {
-                    note.classList.add('dragging');
+        // Start drag
+        function startDrag(index, event) {
+            event.preventDefault();
+            dragNoteIndex = index;
+            dragStartY = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
+            const noteEl = document.querySelector(`.note[data-index="${index}"]`);
+            noteEl.classList.add('dragging');
+
+            // Crear placeholder
+            dragPlaceholder = document.createElement('div');
+            dragPlaceholder.classList.add('note-placeholder');
+            noteEl.parentNode.insertBefore(dragPlaceholder, noteEl.nextSibling);
+
+            // Eventos
+            document.addEventListener('pointermove', onDragMove);
+            document.addEventListener('pointerup', onDragEnd);
+            document.addEventListener('pointercancel', onDragEnd);
+
+            // Iniciar auto-scroll
+            startAutoScroll();
+        }
+
+        // On drag move
+        function onDragMove(event) {
+            if (dragNoteIndex === null) return;
+            event.preventDefault();
+            currentDragY = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
+            const notesList = document.getElementById('notes-list');
+            const dragNoteEl = document.querySelector('.note.dragging');
+            const deltaY = currentDragY - dragStartY;
+
+            dragNoteEl.style.transform = `translateY(${deltaY}px)`;
+
+            // Encontrar posición para placeholder
+            const notes = Array.from(notesList.querySelectorAll('.note:not(.dragging)'));
+            let insertIndex = 0;
+            for (let i = 0; i < notes.length; i++) {
+                const rect = notes[i].getBoundingClientRect();
+                if (currentDragY < rect.top + rect.height / 2) {
+                    insertIndex = i;
+                    break;
                 }
-            });
-            
-            // Mostrar instrucciones
-            document.getElementById('reorder-instructions').style.display = 'block';
-        }
-
-        // Deactivate reorder mode
-        function deactivateReorderMode() {
-            isReorderMode = false;
-            noteToMove = null;
-            
-            // Remover estilos
-            document.body.classList.remove('reorder-mode');
-            document.querySelectorAll('.note').forEach(note => {
-                note.classList.remove('dragging', 'drop-target');
-            });
-            
-            // Ocultar instrucciones
-            document.getElementById('reorder-instructions').style.display = 'none';
-        }
-
-        // Move note to position
-        function moveNoteToPosition(fromIndex, toIndex) {
-            const folderNotes = notes[currentFolder];
-            
-            if (fromIndex < 0 || fromIndex >= folderNotes.length || 
-                toIndex < 0 || toIndex >= folderNotes.length) {
-                return;
+                insertIndex = i + 1;
             }
-            
-            // Mover la nota
-            const [movedNote] = folderNotes.splice(fromIndex, 1);
-            folderNotes.splice(toIndex, 0, movedNote);
-            
-            // Actualizar la interfaz
-            renderNotes();
+
+            const targetNote = notes[insertIndex] || null;
+            notesList.insertBefore(dragPlaceholder, targetNote);
+        }
+
+        // Start auto scroll
+        function startAutoScroll() {
+            stopAutoScroll();
+            autoScrollInterval = setInterval(() => {
+                if (dragNoteIndex === null) return;
+                const notesList = document.getElementById('notes-list');
+                const rect = notesList.getBoundingClientRect();
+                const edgeTop = 100; // Distancia desde el borde superior
+                const edgeBottom = 100; // Distancia desde el borde inferior
+                let scrollSpeed = 0;
+
+                if (currentDragY < rect.top + edgeTop) {
+                    // Cerca del top, scroll up
+                    const distance = (rect.top + edgeTop - currentDragY) / edgeTop;
+                    scrollSpeed = -Math.min(20, 10 * distance); // Máx 20px por frame
+                } else if (currentDragY > rect.bottom - edgeBottom) {
+                    // Cerca del bottom, scroll down
+                    const distance = (currentDragY - (rect.bottom - edgeBottom)) / edgeBottom;
+                    scrollSpeed = Math.min(20, 10 * distance);
+                }
+
+                if (scrollSpeed !== 0) {
+                    notesList.scrollTop += scrollSpeed;
+                    // Actualizar posición del dragged note para que siga el dedo
+                    dragStartY += scrollSpeed;
+                }
+            }, 16); // ~60fps
+        }
+
+        // Stop auto scroll
+        function stopAutoScroll() {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+            }
+        }
+
+        // On drag end
+        function onDragEnd(event) {
+            if (dragNoteIndex === null) return;
+            stopAutoScroll();
+            const notesList = document.getElementById('notes-list');
+            const dragNoteEl = document.querySelector('.note.dragging');
+            dragNoteEl.classList.remove('dragging');
+            dragNoteEl.style.transform = '';
+
+            // Encontrar nuevo índice
+            const children = Array.from(notesList.children);
+            const placeholderIndex = children.indexOf(dragPlaceholder);
+
+            // Mover en array
+            const [movedNote] = notes[currentFolder].splice(dragNoteIndex, 1);
+            notes[currentFolder].splice(placeholderIndex > dragNoteIndex ? placeholderIndex - 1 : placeholderIndex, 0, movedNote);
+
+            dragPlaceholder.remove();
+            dragPlaceholder = null;
+            dragNoteIndex = null;
             saveToStorage();
+            renderNotes();
+
+            document.removeEventListener('pointermove', onDragMove);
+            document.removeEventListener('pointerup', onDragEnd);
+            document.removeEventListener('pointercancel', onDragEnd);
+        }
+
+        // Setup swipe for folder change
+        function setupSwipe() {
+            const notesList = document.getElementById('notes-list');
+            notesList.addEventListener('touchstart', (e) => {
+                if (dragNoteIndex !== null) return;
+                swipeStartX = e.touches[0].clientX;
+                isSwiping = true;
+                notesList.style.transition = 'none';
+            }, { passive: false });
+
+            notesList.addEventListener('touchmove', (e) => {
+                if (!isSwiping || dragNoteIndex !== null) return;
+                e.preventDefault();
+                swipeCurrentX = e.touches[0].clientX;
+                const deltaX = swipeCurrentX - swipeStartX;
+                notesList.style.transform = `translateX(${deltaX}px)`;
+            }, { passive: false });
+
+            notesList.addEventListener('touchend', (e) => {
+                if (!isSwiping || dragNoteIndex !== null) return;
+                const deltaX = swipeCurrentX - swipeStartX;
+                const currentIndex = folders.indexOf(currentFolder);
+                notesList.style.transition = 'transform 0.3s ease';
+                
+                if (Math.abs(deltaX) > window.innerWidth / 3) {
+                    let newFolder;
+                    let direction;
+                    if (deltaX > 0 && currentIndex > 0) {
+                        newFolder = folders[currentIndex - 1];
+                        direction = 'right';
+                    } else if (deltaX < 0 && currentIndex < folders.length - 1) {
+                        newFolder = folders[currentIndex + 1];
+                        direction = 'left';
+                    }
+                    if (newFolder) {
+                        switchFolder(newFolder, direction);
+                        return;
+                    }
+                }
+                // Snap back
+                notesList.style.transform = 'translateX(0)';
+                isSwiping = false;
+            }, { passive: false });
         }
 
         // Render folder dropdown in modal
@@ -1612,32 +1237,15 @@
         // Copy to clipboard
         function copyNoteContent(text) {
             navigator.clipboard.writeText(text).then(() => {
-                // Show subtle success feedback
-                const buttons = document.querySelectorAll('.note-btn, .view-btn');
-                buttons.forEach(btn => {
-                    if (btn.textContent.includes('Copiar')) {
-                        const originalText = btn.textContent;
-                        btn.textContent = '¡Copiado!';
-                        btn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
-                        setTimeout(() => {
-                            btn.textContent = originalText;
-                            btn.style.background = 'linear-gradient(45deg, #007AFF, #00D4FF)';
-                        }, 1500);
-                    }
-                });
+                // Feedback silencioso
             }).catch(err => {
                 alert('Error al copiar');
             });
         }
 
-        // Copy from view with animation
+        // Copy from view
         function copyFromView() {
             copyNoteContent(currentContent);
-            const btn = document.getElementById('copy-view-btn');
-            btn.classList.add('copy-success');
-            setTimeout(() => {
-                btn.classList.remove('copy-success');
-            }, 1000);
         }
 
         // Add note
@@ -1668,12 +1276,7 @@
             let folder = document.getElementById('note-folder').value;
 
             if (!content) {
-                // Shake animation for validation error
-                const contentTextarea = document.getElementById('note-content');
-                contentTextarea.style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => {
-                    contentTextarea.style.animation = '';
-                }, 500);
+                alert('El contenido es obligatorio.');
                 return;
             }
 
@@ -1703,6 +1306,7 @@
             renderNotes();
             saveToStorage();
             closeModal();
+            window.location.reload();
         }
 
         // Edit note
@@ -1724,7 +1328,7 @@
             document.getElementById('modal-title').textContent = 'Editar nota';
             renderFolderDropdown();
             
-            // Cerrar otros modales abiertos
+            // Cerrar otros modals abiertos
             closeSearchModal();
             closeViewModal();
             
@@ -1784,9 +1388,6 @@
             dropdown.style.left = (btnRect.right + window.scrollX - 150) + 'px';
             dropdown.style.top = (btnRect.bottom + window.scrollY + 5) + 'px';
             dropdown.style.display = 'block';
-            setTimeout(() => {
-                dropdown.style.transform = 'scale(1)';
-            }, 10);
             e.stopPropagation();
         }
 
@@ -1817,10 +1418,8 @@
             let allNotes = [];
             
             if (searchMode === 'current') {
-                // Para búsqueda en carpeta actual
                 allNotes = (notes[currentFolder] || []).map(note => ({...note, folder: currentFolder}));
             } else {
-                // Para búsqueda en todas las carpetas
                 folders.forEach(folder => {
                     const folderNotes = (notes[folder] || []).map(note => ({...note, folder}));
                     allNotes = allNotes.concat(folderNotes);
@@ -1856,32 +1455,20 @@
 
         // Show note menu
         function showNoteMenu(i, e) {
-            if (isReorderMode) {
-                deactivateReorderMode();
-                return;
-            }
-            
             currentMenuIndex = i;
             const dropdown = document.getElementById('note-dropdown');
             const btnRect = e.currentTarget.getBoundingClientRect();
             dropdown.style.left = (btnRect.right + window.scrollX - 150) + 'px';
             dropdown.style.top = (btnRect.bottom + window.scrollY + 5) + 'px';
             dropdown.style.display = 'block';
-            setTimeout(() => {
-                dropdown.style.transform = 'scale(1)';
-            }, 10);
         }
 
         // Hide dropdown
         function hideDropdown() {
             const dropdown = document.getElementById('note-dropdown');
             const searchDropdown = document.getElementById('search-dropdown');
-            dropdown.style.transform = 'scale(0)';
-            searchDropdown.style.transform = 'scale(0)';
-            setTimeout(() => {
-                dropdown.style.display = 'none';
-                searchDropdown.style.display = 'none';
-            }, 200);
+            dropdown.style.display = 'none';
+            searchDropdown.style.display = 'none';
         }
 
         // Show delete note confirm
@@ -1959,10 +1546,8 @@
                 
                 // Show success state
                 cloudBtn.textContent = '¡Configuración cargada!';
-                cloudBtn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
                 setTimeout(() => {
                     cloudBtn.textContent = originalText;
-                    cloudBtn.style.background = 'linear-gradient(45deg, #FFD700, #FFA500)';
                 }, 2000);
                 
                 toggleSidebar();
@@ -1970,10 +1555,8 @@
                 alert('Error al cargar configuración de la nube.');
                 const cloudBtn = document.querySelector('.cloud-btn');
                 cloudBtn.textContent = 'Error al cargar';
-                cloudBtn.style.background = 'linear-gradient(45deg, #FF3B30, #FF6B6B)';
                 setTimeout(() => {
                     cloudBtn.textContent = 'usar configuracion de la nube';
-                    cloudBtn.style.background = 'linear-gradient(45deg, #FFD700, #FFA500)';
                 }, 2000);
             }
         }
@@ -2006,12 +1589,7 @@
             const name = document.getElementById('folder-name').value.trim();
             
             if (!name) {
-                // Shake animation for validation error
-                const folderInput = document.getElementById('folder-name');
-                folderInput.style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => {
-                    folderInput.style.animation = '';
-                }, 500);
+                alert('El nombre es obligatorio.');
                 return;
             }
             
@@ -2053,14 +1631,6 @@
         document.getElementById('note-content').addEventListener('input', function() {
             const count = this.value.length;
             document.getElementById('char-count').textContent = count;
-            
-            // Pulse animation when typing
-            if (count % 10 === 0) {
-                this.style.transform = 'scale(1.01)';
-                setTimeout(() => {
-                    this.style.transform = 'scale(1)';
-                }, 100);
-            }
         });
 
         // Sidebar functions
@@ -2126,6 +1696,7 @@
             renderFolderDropdown();
             renderDeleteFolderDropdown();
             renderNotes();
+            setupSwipe();
         }
 
         // Start the application

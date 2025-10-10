@@ -7,10 +7,10 @@
     <style>
         /* Prevenir pull-to-refresh y mejorar rendimiento */
         body {
-            overscroll-behavior-y: contain;
-            overflow: hidden;
+            overscroll-behavior-y: auto;
+            overflow: auto;
             height: 100vh;
-            position: fixed;
+            position: relative;
             width: 100%;
             margin: 0;
             padding: 0;
@@ -22,8 +22,9 @@
         }
 
         html {
-            overscroll-behavior-y: contain;
+            overscroll-behavior-y: auto;
             background: #000;
+            height: 100%;
         }
 
         /* Top navigation */
@@ -175,7 +176,8 @@
             overflow-y: auto;
             background: #000;
             transition: transform 0.3s ease;
-            touch-action: pan-y; /* Permitir scroll vertical */
+            touch-action: pan-y;
+            -webkit-overflow-scrolling: touch;
         }
 
         .note {
@@ -345,7 +347,8 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .modal-header, .view-header {
@@ -445,6 +448,7 @@
             overflow-y: auto;
             resize: none;
             min-height: 200px;
+            -webkit-overflow-scrolling: touch;
         }
 
         .char-count {
@@ -917,7 +921,7 @@
             overlay.classList.remove('open');
         }
 
-        // Prevenir pull-to-refresh y manejar touch events
+        // Prevenir pull-to-refresh y manejar touch events - VERSIÓN CORREGIDA
         document.addEventListener('touchmove', function(e) {
             if (e.touches.length > 1) {
                 return; // Permitir zoom
@@ -926,8 +930,11 @@
             const target = e.target;
             const isScrollable = target.closest('.notes-list') || 
                                 target.closest('.modal-content') || 
-                                target.closest('.folders');
+                                target.closest('.folders') ||
+                                target.closest('.form-textarea');
             
+            // Solo prevenir el comportamiento por defecto en elementos no desplazables
+            // y solo cuando estemos cerca del top para evitar pull-to-refresh
             if (!isScrollable && e.touches[0].clientY < 50) {
                 e.preventDefault();
             }

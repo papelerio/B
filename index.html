@@ -1977,7 +1977,7 @@
             overlay.classList.toggle('open');
         }
 
-        // Export JSON - Updated to always download
+        // Export JSON - FUNCIÓN SIMPLIFICADA
         function exportJSON() {
             const data = { 
                 folders, 
@@ -1987,6 +1987,7 @@
             };
             const jsonString = JSON.stringify(data, null, 2);
             
+            // Crear y descargar el archivo
             const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1995,6 +1996,8 @@
             a.style.display = 'none';
             document.body.appendChild(a);
             a.click();
+            
+            // Limpiar
             setTimeout(() => {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
@@ -2002,7 +2005,7 @@
             }, 100);
         }
 
-        // Import JSON - VERSIÓN CORREGIDA
+        // Import JSON - FUNCIÓN SIMPLIFICADA
         function importJSON() {
             const input = document.createElement('input');
             input.type = 'file';

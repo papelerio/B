@@ -2,16 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Administrador del Portapapeles</title>
     <style>
         /* Prevenir pull-to-refresh y mejorar rendimiento */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
         body {
-            overscroll-behavior-y: auto;
-            overflow: auto;
+            overscroll-behavior-y: none;
+            overflow: hidden;
             height: 100vh;
-            position: relative;
-            width: 100%;
+            width: 100vw;
+            position: fixed;
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -19,12 +24,33 @@
             color: #fff;
             display: flex;
             flex-direction: column;
+            touch-action: pan-y;
         }
 
         html {
-            overscroll-behavior-y: auto;
+            overscroll-behavior-y: none;
             background: #000;
             height: 100%;
+            overflow: hidden;
+        }
+
+        /* Prevenir selección de texto y zoom */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-text-size-adjust: none;
+            text-size-adjust: none;
+        }
+
+        /* Permitir selección en áreas de texto */
+        .form-input, .form-textarea, .note-view-content {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
 
         /* Top navigation */
@@ -35,6 +61,7 @@
             padding: 16px;
             background: #000;
             border-bottom: 1px solid #333;
+            flex-shrink: 0;
         }
 
         .title {
@@ -147,6 +174,7 @@
             border-bottom: 1px solid #333;
             scrollbar-width: none;
             -ms-overflow-style: none;
+            flex-shrink: 0;
         }
 
         .folders::-webkit-scrollbar {
@@ -853,6 +881,25 @@
         // Stack para manejar el historial de navegación
         let navigationStack = ['main']; // Comienza en la vista principal
 
+        // Prevenir zoom y comportamiento no deseado
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        });
+
         // App back action (for buttons in app, never exit)
         function appHandleBack() {
             if (navigationStack.length > 1) {
@@ -928,7 +975,8 @@
         // Prevenir pull-to-refresh y manejar touch events - VERSIÓN MEJORADA
         document.addEventListener('touchmove', function(e) {
             if (e.touches.length > 1) {
-                return; // Permitir zoom
+                e.preventDefault(); // Prevenir zoom con múltiples dedos
+                return;
             }
             
             const target = e.target;
@@ -1684,6 +1732,7 @@
             overlay.classList.toggle('open');
         }
 
+        // Export JSON - VERSIÓN CORREGIDA PARA ANDROID
         function exportJSON() {
             const data = { 
                 folders, 
@@ -1691,20 +1740,38 @@
                 currentFolder,
                 timestamp: new Date().toISOString()
             };
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const jsonString = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            
+            // Crear URL del blob
             const url = URL.createObjectURL(blob);
+            
+            // Crear elemento de enlace temporal
             const a = document.createElement('a');
             a.href = url;
             a.download = 'portapapeles.json';
+            a.style.display = 'none';
+            
+            // Añadir al documento y hacer click
+            document.body.appendChild(a);
             a.click();
-            URL.revokeObjectURL(url);
+            
+            // Limpiar
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
             toggleSidebar();
         }
 
+        // Import JSON - VERSIÓN CORREGIDA
         function importJSON() {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.json';
+            input.style.display = 'none';
+            
             input.onchange = function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -1720,14 +1787,23 @@
                             renderDeleteFolderDropdown();
                             renderNotes();
                             saveToStorage();
+                            alert('Datos importados correctamente.');
                         } catch (err) {
-                            alert('Error al importar JSON.');
+                            alert('Error al importar JSON. El archivo puede estar corrupto.');
                         }
                     };
                     reader.readAsText(file);
                 }
             };
+            
+            document.body.appendChild(input);
             input.click();
+            
+            // Limpiar después de usar
+            setTimeout(() => {
+                document.body.removeChild(input);
+            }, 1000);
+            
             toggleSidebar();
         }
 

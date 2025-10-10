@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Administrador del Portapapeles</title>
     <style>
+        /* CSS Variables for font sizes */
+        :root {
+            --base-font-size: 16px;
+        }
+
         /* Prevenir pull-to-refresh y mejorar rendimiento */
         * {
             box-sizing: border-box;
@@ -254,21 +259,21 @@
         }
 
         .note-title {
-            font-size: 16px;
+            font-size: var(--base-font-size);
             font-weight: bold;
             margin-bottom: 8px;
             color: #fff;
         }
 
         .note-content {
-            font-size: 14px;
+            font-size: calc(var(--base-font-size) * 0.875);
             color: #ccc;
             margin-bottom: 8px;
             line-height: 1.4;
         }
 
         .note-date {
-            font-size: 12px;
+            font-size: calc(var(--base-font-size) * 0.75);
             color: #888;
         }
 
@@ -680,6 +685,120 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Settings Modal Styles */
+        .settings-section {
+            margin-bottom: 20px;
+            padding: 16px;
+            background: #111;
+            border-radius: 8px;
+        }
+
+        .settings-label {
+            display: block;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .settings-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #font-size-slider {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        #font-size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007AFF;
+            cursor: pointer;
+        }
+
+        #font-size-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007AFF;
+            cursor: pointer;
+            border: none;
+        }
+
+        .settings-toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .settings-toggle {
+            position: relative;
+            width: 50px;
+            height: 30px;
+        }
+
+        .settings-toggle input[type="checkbox"] {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .settings-toggle label {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #333;
+            border-radius: 15px;
+            transition: 0.3s;
+        }
+
+        .settings-toggle input[type="checkbox"]:checked + label {
+            background-color: #007AFF;
+        }
+
+        .settings-toggle label::before {
+            position: absolute;
+            content: "";
+            height: 24px;
+            width: 24px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .settings-toggle input[type="checkbox"]:checked + label::before {
+            transform: translateX(20px);
+        }
+
+        .example-notes {
+            padding: 16px;
+            background: #000;
+        }
+
+        .example-notes .note {
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .example-notes .reorder-btn,
+        .example-notes .note-menu-section {
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -703,6 +822,7 @@
         <button class="sidebar-btn" onclick="importJSON()">importar JSON</button>
         <button class="sidebar-btn" onclick="showAddFolderModal()">añadir carpeta nueva</button>
         <button class="sidebar-btn" onclick="showDeleteFolderModal()">eliminar carpeta</button>
+        <button class="sidebar-btn" onclick="showSettingsModal()">configuraciones</button>
         <button class="cloud-btn" onclick="loadCloudConfig()">usar configuracion de la nube</button>
     </div>
 
@@ -844,6 +964,71 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeSettingsModal()">×</button>
+                <div class="modal-title">Configuraciones</div>
+            </div>
+            <div class="settings-section">
+                <label class="settings-label">Tamaño de fuente de notas</label>
+                <div class="settings-slider-container">
+                    <input type="range" id="font-size-slider" min="12" max="20" value="16" step="1" oninput="updateFontSize(this.value)">
+                    <span id="font-size-value">16px</span>
+                </div>
+            </div>
+            <div class="settings-section">
+                <label class="settings-label">Ocultar fecha y hora en las notas</label>
+                <div class="settings-toggle-container">
+                    <div class="settings-toggle">
+                        <input type="checkbox" id="hide-date-toggle" onchange="toggleHideDate(this.checked)">
+                        <label for="hide-date-toggle"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-section">
+                <label class="settings-label">Ocultar contenido de la nota</label>
+                <div class="settings-toggle-container">
+                    <div class="settings-toggle">
+                        <input type="checkbox" id="hide-content-toggle" onchange="toggleHideContent(this.checked)">
+                        <label for="hide-content-toggle"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="example-notes">
+                <div class="notes-list">
+                    <div class="note">
+                        <div class="note-content-section">
+                            <div class="note-title">Nota de ejemplo 1</div>
+                            <div class="note-content">Este es un contenido de ejemplo para mostrar cómo se ve el texto con el tamaño actual de fuente.</div>
+                            <div class="note-date">10 oct, 14:06</div>
+                        </div>
+                        <div class="note-buttons-section">
+                            <button class="reorder-btn" title="Mover nota">↕</button>
+                            <div class="note-menu-section">
+                                <button class="note-menu-btn">⋮</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="note">
+                        <div class="note-content-section">
+                            <div class="note-title">Nota de ejemplo 2</div>
+                            <div class="note-content">Otra nota de demostración que se actualiza en tiempo real al mover el slider.</div>
+                            <div class="note-date">10 oct, 13:22</div>
+                        </div>
+                        <div class="note-buttons-section">
+                            <button class="reorder-btn" title="Mover nota">↕</button>
+                            <div class="note-menu-section">
+                                <button class="note-menu-btn">⋮</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Data structures
         let folders = ['portapapeles'];
@@ -928,6 +1113,9 @@
                         break;
                     case 'delete-folder-modal':
                         showDeleteFolderModal();
+                        break;
+                    case 'settings-modal':
+                        showSettingsModal();
                         break;
                     case 'confirm-modal':
                         // For confirm, just close it without re-opening
@@ -1030,6 +1218,47 @@
             }
         }
 
+        // Initialize font size from localStorage
+        function initializeFontSize() {
+            const savedSize = localStorage.getItem('noteFontSize') || '16';
+            document.documentElement.style.setProperty('--base-font-size', savedSize + 'px');
+            const slider = document.getElementById('font-size-slider');
+            const valueSpan = document.getElementById('font-size-value');
+            if (slider) {
+                slider.value = savedSize;
+                valueSpan.textContent = savedSize + 'px';
+            }
+        }
+
+        // Update font size
+        function updateFontSize(value) {
+            document.documentElement.style.setProperty('--base-font-size', value + 'px');
+            document.getElementById('font-size-value').textContent = value + 'px';
+            localStorage.setItem('noteFontSize', value);
+        }
+
+        // Toggle hide date
+        function toggleHideDate(hide) {
+            localStorage.setItem('hideDate', hide);
+            renderNotes();
+        }
+
+        // Toggle hide content
+        function toggleHideContent(hide) {
+            localStorage.setItem('hideContent', hide);
+            renderNotes();
+        }
+
+        // Initialize toggles
+        function initializeToggles() {
+            const hideDate = localStorage.getItem('hideDate') === 'true';
+            const hideContent = localStorage.getItem('hideContent') === 'true';
+            const dateToggle = document.getElementById('hide-date-toggle');
+            const contentToggle = document.getElementById('hide-content-toggle');
+            if (dateToggle) dateToggle.checked = hideDate;
+            if (contentToggle) contentToggle.checked = hideContent;
+        }
+
         // Escape HTML
         function escapeHtml(text) {
             if (text === null || text === undefined) return '';
@@ -1089,13 +1318,15 @@
         function renderNotes() {
             const notesList = document.getElementById('notes-list');
             const folderNotes = notes[currentFolder] || [];
+            const hideDate = localStorage.getItem('hideDate') === 'true';
+            const hideContent = localStorage.getItem('hideContent') === 'true';
             
             notesList.innerHTML = folderNotes.map((note, i) => `
                 <div class="note" data-index="${i}" onclick="handleNoteClick(${i}, event)">
                     <div class="note-content-section">
                         <div class="note-title">${escapeHtml(note.title)}</div>
-                        <div class="note-content">${escapeHtml(note.content.substring(0, 50) + (note.content.length > 50 ? '...' : ''))}</div>
-                        <div class="note-date">${formatDate(note.date)}</div>
+                        ${!hideContent ? `<div class="note-content">${escapeHtml(note.content.substring(0, 50) + (note.content.length > 50 ? '...' : ''))}</div>` : ''}
+                        ${!hideDate ? `<div class="note-date">${formatDate(note.date)}</div>` : ''}
                     </div>
                     <div class="note-buttons-section">
                         <button class="reorder-btn" onpointerdown="startDrag(${i}, event)" title="Mover nota">↕</button>
@@ -1228,7 +1459,7 @@
             document.removeEventListener('pointercancel', onDragEnd);
         }
 
-        // Setup swipe for folder change - VERSIÓN MEJORADA
+        // Setup swipe for folder change - VERSIÓN MEJORADO
         function setupSwipe() {
             const notesList = document.getElementById('notes-list');
             
@@ -1718,6 +1949,20 @@
             navigationStack.pop(); // Remover del stack
         }
 
+        // Show settings modal
+        function showSettingsModal() {
+            document.getElementById('settings-modal').classList.add('open');
+            initializeToggles();
+            toggleSidebar();
+            pushToNavigationStack('settings-modal');
+        }
+
+        // Close settings modal
+        function closeSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('open');
+            navigationStack.pop();
+        }
+
         // Character count
         document.getElementById('note-content').addEventListener('input', function() {
             const count = this.value.length;
@@ -1732,7 +1977,7 @@
             overlay.classList.toggle('open');
         }
 
-        // Export JSON - MODIFIED FOR ANDROID
+        // Export JSON - Updated to always download
         function exportJSON() {
             const data = { 
                 folders, 
@@ -1742,34 +1987,19 @@
             };
             const jsonString = JSON.stringify(data, null, 2);
             
-            // Detectar si es Android
-            const isAndroid = /Android/i.test(navigator.userAgent);
-            
-            if (isAndroid) {
-                // En Android, copiar al portapapeles
-                navigator.clipboard.writeText(jsonString).then(() => {
-                    alert('JSON copiado al portapapeles');
-                    toggleSidebar();
-                }).catch(err => {
-                    alert('Error al copiar JSON al portapapeles');
-                    toggleSidebar();
-                });
-            } else {
-                // En otros dispositivos, descargar archivo
-                const blob = new Blob([jsonString], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'portapapeles.json';
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'portapapeles_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
                 toggleSidebar();
-            }
+            }, 100);
         }
 
         // Import JSON - VERSIÓN CORREGIDA
@@ -1818,6 +2048,7 @@
         function init() {
             loadFromStorage();
             initializeData();
+            initializeFontSize();
             renderFolders();
             renderFolderDropdown();
             renderDeleteFolderDropdown();

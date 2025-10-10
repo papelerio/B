@@ -841,10 +841,14 @@
         let currentDragY = 0;
         let autoScrollInterval = null;
 
-        // Variables para swipe entre carpetas
+        // Variables para swipe entre carpetas - MEJORADO
         let swipeStartX = 0;
+        let swipeStartY = 0;
         let swipeCurrentX = 0;
+        let swipeCurrentY = 0;
         let isSwiping = false;
+        let swipeThreshold = 50; // Mínimo de movimiento para considerar swipe
+        let verticalScrollThreshold = 10; // Umbral para detectar scroll vertical
 
         // Stack para manejar el historial de navegación
         let navigationStack = ['main']; // Comienza en la vista principal
@@ -921,7 +925,7 @@
             overlay.classList.remove('open');
         }
 
-        // Prevenir pull-to-refresh y manejar touch events - VERSIÓN CORREGIDA
+        // Prevenir pull-to-refresh y manejar touch events - VERSIÓN MEJORADA
         document.addEventListener('touchmove', function(e) {
             if (e.touches.length > 1) {
                 return; // Permitir zoom
@@ -1176,31 +1180,57 @@
             document.removeEventListener('pointercancel', onDragEnd);
         }
 
-        // Setup swipe for folder change
+        // Setup swipe for folder change - VERSIÓN MEJORADA
         function setupSwipe() {
             const notesList = document.getElementById('notes-list');
+            
             notesList.addEventListener('touchstart', (e) => {
                 if (dragNoteIndex !== null) return;
                 swipeStartX = e.touches[0].clientX;
-                isSwiping = true;
+                swipeStartY = e.touches[0].clientY;
+                isSwiping = false; // Inicialmente no estamos haciendo swipe
                 notesList.style.transition = 'none';
-            }, { passive: false });
+            }, { passive: true });
 
             notesList.addEventListener('touchmove', (e) => {
-                if (!isSwiping || dragNoteIndex !== null) return;
-                e.preventDefault();
+                if (dragNoteIndex !== null) return;
+                
                 swipeCurrentX = e.touches[0].clientX;
+                swipeCurrentY = e.touches[0].clientY;
+                
                 const deltaX = swipeCurrentX - swipeStartX;
-                notesList.style.transform = `translateX(${deltaX}px)`;
+                const deltaY = swipeCurrentY - swipeStartY;
+                
+                // Si aún no hemos determinado si es un swipe horizontal o scroll vertical
+                if (!isSwiping) {
+                    // Si el movimiento vertical es mayor que el horizontal, es scroll vertical
+                    if (Math.abs(deltaY) > verticalScrollThreshold && Math.abs(deltaY) > Math.abs(deltaX)) {
+                        // Es scroll vertical, permitir que continúe normalmente
+                        isSwiping = false;
+                        return;
+                    }
+                    // Si el movimiento horizontal es significativo, es swipe
+                    if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+                        isSwiping = true;
+                        e.preventDefault(); // Solo prevenir cuando sea swipe horizontal
+                    }
+                }
+                
+                // Si estamos en modo swipe, aplicar la transformación
+                if (isSwiping) {
+                    e.preventDefault();
+                    notesList.style.transform = `translateX(${deltaX}px)`;
+                }
             }, { passive: false });
 
             notesList.addEventListener('touchend', (e) => {
                 if (!isSwiping || dragNoteIndex !== null) return;
+                
                 const deltaX = swipeCurrentX - swipeStartX;
                 const currentIndex = folders.indexOf(currentFolder);
                 notesList.style.transition = 'transform 0.3s ease';
                 
-                if (Math.abs(deltaX) > window.innerWidth / 3) {
+                if (Math.abs(deltaX) > window.innerWidth / 4) { // Reducir el umbral para hacerlo más sensible
                     let newFolder;
                     let direction;
                     if (deltaX > 0 && currentIndex > 0) {
@@ -1212,13 +1242,19 @@
                     }
                     if (newFolder) {
                         switchFolder(newFolder, direction);
+                        isSwiping = false;
                         return;
                     }
                 }
                 // Snap back
                 notesList.style.transform = 'translateX(0)';
                 isSwiping = false;
-            }, { passive: false });
+            }, { passive: true });
+
+            notesList.addEventListener('touchcancel', (e) => {
+                notesList.style.transform = 'translateX(0)';
+                isSwiping = false;
+            }, { passive: true });
         }
 
         // Render folder dropdown in modal

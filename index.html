@@ -111,7 +111,6 @@
             z-index: 1000;
             padding: 80px 16px 16px;
             box-sizing: border-box;
-            overflow-y: auto;
         }
 
         .sidebar.open {
@@ -163,42 +162,12 @@
             text-align: left;
             cursor: pointer;
             border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-btn:hover {
-            background: #222;
-            transform: translateX(5px);
         }
 
         .cloud-btn {
             background: #FFD700 !important;
             color: #000 !important;
             font-weight: bold;
-        }
-
-        .share-btn {
-            background: #FFA500 !important;
-            color: #000 !important;
-            font-weight: bold;
-            border-left: 4px solid #FF8C00 !important;
-        }
-
-        .share-btn:hover {
-            background: #FFB732 !important;
-            transform: translateX(5px);
-        }
-
-        .email-btn {
-            background: #32CD32 !important;
-            color: #000 !important;
-            font-weight: bold;
-            border-left: 4px solid #228B22 !important;
-        }
-
-        .email-btn:hover {
-            background: #50D850 !important;
-            transform: translateX(5px);
         }
 
         /* Folders tabs */
@@ -831,20 +800,59 @@
             opacity: 0.5;
         }
 
-        /* Success message styles */
-        .success-message {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #34C759;
+        /* Nuevos estilos para opciones de exportación */
+        .export-options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .export-option-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 15px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
             color: white;
-            padding: 20px 30px;
-            border-radius: 10px;
-            z-index: 10001;
-            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .export-option-btn:hover {
+            background: #222;
+            border-color: #007AFF;
+        }
+
+        .export-option-btn .icon {
+            font-size: 20px;
+            width: 24px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .export-option-btn .text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .export-option-btn .subtext {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .export-section-title {
+            font-size: 16px;
+            color: #007AFF;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .export-section-title:first-child {
+            margin-top: 0;
         }
     </style>
 </head>
@@ -865,25 +873,12 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <button class="close-btn" onclick="toggleSidebar()">X</button>
-        
-        <!-- Sección de Gestión de Datos -->
-        <div style="color: #007AFF; font-weight: bold; margin: 20px 0 10px 0; padding: 0 5px;">📊 GESTIÓN DE DATOS</div>
-        <button class="sidebar-btn" onclick="exportJSON()">📥 Exportar JSON</button>
-        <button class="sidebar-btn" onclick="importJSON()">📤 Importar JSON</button>
+        <button class="sidebar-btn" onclick="showExportOptions()">📤 Opciones de Exportación</button>
+        <button class="sidebar-btn" onclick="importJSON()">📥 Importar JSON</button>
         <button class="sidebar-btn" onclick="showAddFolderModal()">📁 Añadir carpeta nueva</button>
         <button class="sidebar-btn" onclick="showDeleteFolderModal()">🗑️ Eliminar carpeta</button>
-        
-        <!-- Sección de Compartir -->
-        <div style="color: #FFA500; font-weight: bold; margin: 25px 0 10px 0; padding: 0 5px;">📤 COMPARTIR DATOS</div>
-        <button class="sidebar-btn share-btn" onclick="shareWithApps()">📲 Compartir con Apps</button>
-        <button class="sidebar-btn share-btn" onclick="copyToClipboard()">📋 Copiar al Portapapeles</button>
-        <button class="sidebar-btn email-btn" onclick="shareWithOwner()">📧 Enviar al Dueño</button>
-        <button class="sidebar-btn email-btn" onclick="createBackupEmail()">💾 Crear Backup por Email</button>
-        
-        <!-- Sección de Configuración -->
-        <div style="color: #FFD700; font-weight: bold; margin: 25px 0 10px 0; padding: 0 5px;">⚙️ CONFIGURACIÓN</div>
-        <button class="sidebar-btn" onclick="showSettingsModal()">🔧 Configuraciones</button>
-        <button class="cloud-btn" onclick="loadCloudConfig()">☁️ Usar Configuración de la Nube</button>
+        <button class="sidebar-btn" onclick="showSettingsModal()">⚙️ Configuraciones</button>
+        <button class="cloud-btn" onclick="loadCloudConfig()">☁️ Usar configuración de la nube</button>
     </div>
 
     <!-- Sidebar overlay -->
@@ -1089,6 +1084,55 @@
         </div>
     </div>
 
+    <!-- Export Options Modal -->
+    <div class="modal" id="export-options-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeExportOptionsModal()">×</button>
+                <div class="modal-title">Opciones de Exportación</div>
+            </div>
+            <div class="form-section">
+                <div class="export-section-title">Métodos de Exportación</div>
+                <div class="export-options-grid">
+                    <button class="export-option-btn" onclick="downloadJSON()">
+                        <div class="icon">📥</div>
+                        <div class="text">
+                            Descargar archivo JSON
+                            <div class="subtext">Guarda un archivo .json en tu dispositivo</div>
+                        </div>
+                    </button>
+                    
+                    <button class="export-option-btn" onclick="copyJSONToClipboard()">
+                        <div class="icon">📋</div>
+                        <div class="text">
+                            Copiar JSON al portapapeles
+                            <div class="subtext">Copia los datos para pegarlos en cualquier app</div>
+                        </div>
+                    </button>
+                    
+                    <button class="export-option-btn" onclick="shareJSON()">
+                        <div class="icon">↗️</div>
+                        <div class="text">
+                            Compartir JSON
+                            <div class="subtext">Comparte vía WhatsApp, Gmail, etc.</div>
+                        </div>
+                    </button>
+                </div>
+                
+                <div class="export-section-title">Envío Directo</div>
+                <div class="export-options-grid">
+                    <button class="export-option-btn" onclick="sendJSONToDeveloper()">
+                        <div class="icon">📧</div>
+                        <div class="text">
+                            Enviar JSON al desarrollador
+                            <div class="subtext">Envía tus datos directamente por email</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Data structures
         let folders = ['portapapeles'];
@@ -1181,6 +1225,9 @@
                         // For confirm, just close it without re-opening
                         document.getElementById('confirm-modal').classList.remove('open');
                         navigationStack.pop(); // Extra pop if needed
+                        break;
+                    case 'export-options-modal':
+                        showExportOptions();
                         break;
                 }
             } // else do nothing (in main)
@@ -2037,278 +2084,135 @@
             overlay.classList.toggle('open');
         }
 
-        // ========== FUNCIONES DE EXPORT/IMPORT MEJORADAS ==========
+        // ========== NUEVAS FUNCIONES DE EXPORTACIÓN MEJORADAS ==========
 
-        // Export JSON - SOLUCIÓN DEFINITIVA
-        function exportJSON() {
-            const data = { 
+        // Mostrar modal de opciones de exportación
+        function showExportOptions() {
+            document.getElementById('export-options-modal').classList.add('open');
+            pushToNavigationStack('export-options-modal');
+            toggleSidebar();
+        }
+
+        // Cerrar modal de opciones de exportación
+        function closeExportOptionsModal() {
+            document.getElementById('export-options-modal').classList.remove('open');
+            navigationStack.pop();
+        }
+
+        // Función para obtener datos JSON
+        function getJSONData() {
+            return {
                 folders, 
                 notes,
                 currentFolder,
                 timestamp: new Date().toISOString(),
-                totalNotes: Object.values(notes).reduce((sum, folderNotes) => sum + folderNotes.length, 0)
+                version: "1.0"
             };
-            
+        }
+
+        // 1. Descargar archivo JSON (método original mejorado)
+        function downloadJSON() {
+            const data = getJSONData();
             const jsonString = JSON.stringify(data, null, 2);
-            const fileName = 'portapapeles_backup.json';
+            const fileName = `portapapeles_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
             
-            // MOSTRAR directamente los datos para COPIAR MANUALMENTE
-            showExportData(jsonString, fileName);
-            toggleSidebar();
-        }
-
-        function showExportData(jsonString, fileName) {
-            // Crear modal de exportación
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.95);
-                z-index: 10000;
-                display: flex;
-                flex-direction: column;
-                padding: 20px;
-                color: white;
-            `;
-            
-            modal.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-shrink: 0;">
-                    <h2 style="color: #007AFF; margin: 0;">💾 Exportar Datos</h2>
-                    <button onclick="this.parentElement.parentElement.remove()" 
-                            style="background: #FF3B30; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-size: 18px;">
-                        ×
-                    </button>
-                </div>
+            try {
+                // Intentar descarga normal
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
                 
-                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <h4 style="color: #FFD700; margin: 0 0 10px 0;">📋 INSTRUCCIONES:</h4>
-                    <ol style="margin: 0; padding-left: 20px; line-height: 1.5;">
-                        <li>Pulsa <strong>"COPIAR TODO"</strong> para copiar los datos</li>
-                        <li>Abre cualquier app de notas (Google Keep, Bloc de notas, etc.)</li>
-                        <li>Pega los datos y <strong>guarda como ${fileName}</strong></li>
-                        <li>¡Listo! Tienes tu backup seguro</li>
-                    </ol>
-                </div>
-                
-                <div style="flex: 1; display: flex; flex-direction: column; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #ccc;">📊 Resumen:</span>
-                        <span style="color: #007AFF;">
-                            ${Object.keys(notes).length} carpetas, 
-                            ${Object.values(notes).reduce((sum, folderNotes) => sum + folderNotes.length, 0)} notas
-                        </span>
-                    </div>
-                    <textarea 
-                        id="export-data-textarea" 
-                        style="
-                            flex: 1; 
-                            background: #111; 
-                            color: #00ff00; 
-                            border: 1px solid #333; 
-                            padding: 15px; 
-                            border-radius: 8px; 
-                            font-family: 'Courier New', monospace; 
-                            font-size: 12px; 
-                            resize: none;
-                            line-height: 1.4;
-                        "
-                        readonly
-                    >${jsonString}</textarea>
-                </div>
-                
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button onclick="copyExportData()" 
-                            style="flex: 2; background: #007AFF; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: bold;">
-                        📋 COPIAR TODO
-                    </button>
-                    <button onclick="shareExportData()" 
-                            style="flex: 1; background: #34C759; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 14px;">
-                        📤 COMPARTIR
-                    </button>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // Auto-seleccionar el texto después de un momento
-            setTimeout(() => {
-                const textarea = document.getElementById('export-data-textarea');
-                textarea.select();
-            }, 500);
-        }
-
-        function copyExportData() {
-            const textarea = document.getElementById('export-data-textarea');
-            
-            // Intentar con la API moderna primero
-            navigator.clipboard.writeText(textarea.value).then(() => {
-                showCopySuccess();
-            }).catch(err => {
-                // Fallback para navegadores antiguos/APK
-                textarea.select();
-                try {
-                    document.execCommand('copy');
-                    showCopySuccess();
-                } catch (fallbackErr) {
-                    // Último recurso: mostrar mensaje para copiar manualmente
-                    alert('⚠️ Selecciona todo el texto y cópialo manualmente (Ctrl+A, Ctrl+C)');
-                }
-            });
-        }
-
-        function showCopySuccess() {
-            // Mostrar mensaje de éxito temporal
-            const successMsg = document.createElement('div');
-            successMsg.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: #34C759;
-                color: white;
-                padding: 20px 30px;
-                border-radius: 10px;
-                z-index: 10001;
-                font-weight: bold;
-                text-align: center;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            `;
-            successMsg.innerHTML = `
-                <div style="font-size: 24px; margin-bottom: 10px;">✅</div>
-                <div>¡Todo copiado al portapapeles!</div>
-                <div style="font-size: 12px; margin-top: 5px; opacity: 0.9;">Ahora pégalo donde quieras guardarlo</div>
-            `;
-            
-            document.body.appendChild(successMsg);
-            
-            setTimeout(() => {
-                document.body.removeChild(successMsg);
-            }, 3000);
-        }
-
-        function shareExportData() {
-            const textarea = document.getElementById('export-data-textarea');
-            
-            // Verificar si la API de compartir está disponible
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Backup Portapapeles',
-                    text: textarea.value.substring(0, 1000) + '...', // Primeros 1000 caracteres
-                    files: []
-                }).catch(err => {
-                    console.log('Compartir cancelado o no disponible');
-                });
-            } else {
-                alert('📤 Para compartir:\n\n1. Copia los datos primero\n2. Comparte desde cualquier app\n3. O envía por email/WhatsApp');
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    closeExportOptionsModal();
+                    showSuccessMessage('Archivo JSON descargado', 'Revisa tu carpeta de descargas');
+                }, 100);
+            } catch (error) {
+                // Fallback: copiar al portapapeles
+                console.error('Error en descarga:', error);
+                copyJSONToClipboard();
             }
         }
 
-        // ========== NUEVAS FUNCIONES DE COMPARTIR ==========
-
-        // Compartir con Apps
-        function shareWithApps() {
-            const data = getExportData();
+        // 2. Copiar JSON al portapapeles
+        function copyJSONToClipboard() {
+            const data = getJSONData();
+            const jsonString = JSON.stringify(data, null, 2);
             
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Mis Notas del Portapapeles',
-                    text: `Tengo ${data.totalNotes} notas en ${data.folders.length} carpetas. ${data.jsonString.substring(0, 200)}...`,
-                    url: window.location.href
-                }).then(() => {
-                    showSuccessMessage('¡Compartido exitosamente!');
-                }).catch(err => {
-                    copyToClipboard();
-                });
-            } else {
-                copyToClipboard();
-            }
-            toggleSidebar();
-        }
-
-        // Copiar al Portapapeles
-        function copyToClipboard() {
-            const data = getExportData();
-            
-            navigator.clipboard.writeText(data.jsonString).then(() => {
-                showSuccessMessage('✅ ¡Datos copiados al portapapeles!\n\nPega en cualquier app para guardar.');
+            navigator.clipboard.writeText(jsonString).then(() => {
+                closeExportOptionsModal();
+                showSuccessMessage('JSON copiado', 'Los datos están listos para pegar en cualquier app');
             }).catch(err => {
-                // Fallback
+                // Fallback manual
                 const textarea = document.createElement('textarea');
-                textarea.value = data.jsonString;
+                textarea.value = jsonString;
                 document.body.appendChild(textarea);
                 textarea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textarea);
-                showSuccessMessage('✅ ¡Datos copiados!\n\nUsa Ctrl+V para pegar.');
+                closeExportOptionsModal();
+                showSuccessMessage('JSON copiado', 'Los datos fueron copiados manualmente');
             });
-            toggleSidebar();
         }
 
-        // Enviar al Dueño
-        function shareWithOwner() {
-            const data = getExportData();
-            const ownerEmail = 'Leandroperezm14@gmail.com';
-            const subject = `Backup Portapapeles - ${new Date().toLocaleDateString()}`;
-            const body = `Hola Leandro,\n\nAdjunto mi backup del portapapeles:\n\n• ${data.folders.length} carpetas\n• ${data.totalNotes} notas totales\n• Fecha: ${new Date().toLocaleString()}\n\nDatos JSON:\n${data.jsonString.substring(0, 1000)}...\n\nSaludos!`;
+        // 3. Compartir JSON
+        function shareJSON() {
+            const data = getJSONData();
+            const jsonString = JSON.stringify(data, null, 2);
+            const fileName = `portapapeles_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
             
-            const mailtoLink = `mailto:${ownerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.open(mailtoLink);
-            
-            showSuccessMessage('📧 Email preparado para Leandro\n\nCompleta y envía el correo.');
-            toggleSidebar();
+            if (navigator.share) {
+                // Usar Web Share API si está disponible
+                navigator.share({
+                    title: 'Datos del Portapapeles',
+                    text: 'Mis datos exportados del administrador del portapapeles',
+                    files: [
+                        new File([jsonString], fileName, { 
+                            type: 'application/json' 
+                        })
+                    ]
+                }).then(() => {
+                    closeExportOptionsModal();
+                    console.log('Compartido exitosamente');
+                }).catch(err => {
+                    console.log('Error al compartir:', err);
+                    // Fallback a copiar al portapapeles
+                    copyJSONToClipboard();
+                });
+            } else {
+                // Fallback para navegadores que no soportan compartir
+                alert('Tu navegador no soporta compartir archivos. Se ha copiado al portapapeles.');
+                copyJSONToClipboard();
+            }
         }
 
-        // Crear Backup por Email
-        function createBackupEmail() {
-            const data = getExportData();
-            const subject = `Backup Completo Portapapeles - ${new Date().toLocaleDateString()}`;
-            const body = `Backup de mi aplicación de portapapeles:\n\nESTADÍSTICAS:\n• Carpetas: ${data.folders.length}\n• Notas totales: ${data.totalNotes}\n• Última actualización: ${new Date().toLocaleString()}\n\nDATOS COMPLETOS (JSON):\n\n${data.jsonString}\n\n---\nBackup generado automáticamente`;
+        // 4. Enviar JSON al desarrollador
+        function sendJSONToDeveloper() {
+            const data = getJSONData();
+            const jsonString = JSON.stringify(data, null, 2);
             
-            const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.open(mailtoLink);
+            const subject = "Datos Exportados - Administrador del Portapapeles";
+            const body = `${jsonString}`;
+            const email = "Leandroperezm14@gmail.com";
             
-            showSuccessMessage('📧 Email de backup preparado\n\nEnvíatelo a ti mismo para tener una copia de seguridad.');
-            toggleSidebar();
+            window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+            closeExportOptionsModal();
+            showSuccessMessage('Email abierto', 'Completa el envío en tu app de correo');
         }
 
-        // Función auxiliar para obtener datos de exportación
-        function getExportData() {
-            const data = { 
-                folders, 
-                notes,
-                currentFolder,
-                timestamp: new Date().toISOString(),
-                totalNotes: Object.values(notes).reduce((sum, folderNotes) => sum + folderNotes.length, 0)
-            };
-            
-            return {
-                ...data,
-                jsonString: JSON.stringify(data, null, 2)
-            };
+        // Función para mostrar mensajes de éxito
+        function showSuccessMessage(title, message) {
+            // Podrías implementar un toast o alert personalizado aquí
+            alert(`✅ ${title}\n\n${message}`);
         }
 
-        // Mostrar mensaje de éxito
-        function showSuccessMessage(message) {
-            const successMsg = document.createElement('div');
-            successMsg.className = 'success-message';
-            successMsg.innerHTML = `
-                <div style="font-size: 24px; margin-bottom: 10px;">✅</div>
-                <div>${message.replace(/\n/g, '<br>')}</div>
-            `;
-            
-            document.body.appendChild(successMsg);
-            
-            setTimeout(() => {
-                if (document.body.contains(successMsg)) {
-                    document.body.removeChild(successMsg);
-                }
-            }, 4000);
-        }
-
-        // Import JSON - FUNCIÓN MEJORADA
+        // Import JSON (función existente mejorada)
         function importJSON() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -2322,6 +2226,12 @@
                     reader.onload = function(e) {
                         try {
                             const data = JSON.parse(e.target.result);
+                            
+                            // Validar estructura básica del JSON
+                            if (!data.folders || !data.notes) {
+                                throw new Error('Estructura de archivo inválida');
+                            }
+                            
                             folders = data.folders || folders;
                             notes = data.notes || notes;
                             currentFolder = data.currentFolder || currentFolder;
@@ -2331,9 +2241,9 @@
                             renderNotes();
                             saveToStorage();
                             
-                            showSuccessMessage(`✅ Datos importados correctamente\n\n• ${folders.length} carpetas\n• ${Object.values(notes).reduce((sum, folderNotes) => sum + folderNotes.length, 0)} notas\n• Desde: ${file.name}`);
+                            showSuccessMessage('Importación exitosa', `Datos importados desde: ${file.name}`);
                         } catch (err) {
-                            alert('❌ Error al importar JSON. Archivo corrupto o inválido.');
+                            alert('❌ Error al importar JSON. El archivo puede estar corrupto o tener formato inválido.');
                         }
                     };
                     reader.readAsText(file);

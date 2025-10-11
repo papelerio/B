@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Content-Disposition" content="attachment">
     <title>Administrador del Portapapeles</title>
     <style>
         /* CSS Variables for font sizes */
@@ -1977,7 +1978,9 @@
             overlay.classList.toggle('open');
         }
 
-        // Export JSON - FUNCIÓN SIMPLIFICADA
+        // ========== FUNCIONES DE EXPORT/IMPORT CORREGIDAS ==========
+
+        // Export JSON - VERSIÓN MEJORADA PARA APK
         function exportJSON() {
             const data = { 
                 folders, 
@@ -1986,26 +1989,154 @@
                 timestamp: new Date().toISOString()
             };
             const jsonString = JSON.stringify(data, null, 2);
+            const fileName = 'portapapeles_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+
+            // Detectar si estamos en WebView de Android
+            const isAndroidWebView = /wv|android/.test(navigator.userAgent.toLowerCase()) && 
+                                    !/chrome/.test(navigator.userAgent.toLowerCase());
+
+            if (isAndroidWebView) {
+                // MÉTODO ESPECIAL PARA APK
+                downloadForAPK(jsonString, fileName);
+            } else {
+                // Método normal para navegadores
+                downloadNormal(jsonString, fileName);
+            }
             
-            // Crear y descargar el archivo
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'portapapeles_' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            
-            // Limpiar
-            setTimeout(() => {
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                toggleSidebar();
-            }, 100);
+            toggleSidebar();
         }
 
-        // Import JSON - FUNCIÓN SIMPLIFICADA
+        // Método específico para APK
+        function downloadForAPK(jsonString, fileName) {
+            console.log("📱 Ejecutando en APK - Usando método especial");
+            
+            try {
+                // Crear blob y URL
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                // Crear link de descarga
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                
+                // Disparar el click
+                a.click();
+                
+                // Limpiar
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 1000);
+                
+                // Mostrar mensaje de éxito
+                setTimeout(() => {
+                    showDownloadSuccess(fileName);
+                }, 1500);
+                
+            } catch (error) {
+                console.error('Error en descarga APK:', error);
+                // Fallback: copiar al portapapeles
+                fallbackCopy(jsonString, fileName);
+            }
+        }
+
+        // Método normal para navegadores
+        function downloadNormal(jsonString, fileName) {
+            try {
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+            } catch (error) {
+                fallbackCopy(jsonString, fileName);
+            }
+        }
+
+        // Fallback: copiar al portapapeles
+        function fallbackCopy(jsonString, fileName) {
+            navigator.clipboard.writeText(jsonString).then(() => {
+                alert('✅ JSON copiado al portapapeles\n\nPega los datos en cualquier app de notas o editor de texto.');
+            }).catch(err => {
+                // Fallback manual
+                const textarea = document.createElement('textarea');
+                textarea.value = jsonString;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ JSON copiado. Pégalo donde necesites guardarlo.');
+            });
+        }
+
+        // Mostrar éxito de descarga
+        function showDownloadSuccess(fileName) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #1a1a1a;
+                border: 2px solid #007AFF;
+                border-radius: 12px;
+                padding: 20px;
+                z-index: 10000;
+                color: white;
+                text-align: center;
+                max-width: 90%;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            `;
+            
+            modal.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                <h3 style="color: #007AFF; margin-bottom: 10px;">¡Archivo Descargado!</h3>
+                <p style="margin-bottom: 15px; line-height: 1.4;">
+                    <strong>${fileName}</strong><br>
+                    Revisa tu carpeta de <strong>Descargas</strong>
+                </p>
+                <div style="background: #2a2a2a; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px;">
+                    📍 <strong>Ruta típica:</strong><br>
+                    /storage/emulated/0/Download/
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        style="background: #007AFF; color: white; border: none; 
+                               padding: 10px 20px; border-radius: 6px; width: 100%;">
+                    Entendido
+                </button>
+            `;
+            
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.7);
+                z-index: 9999;
+            `;
+            overlay.onclick = function() {
+                document.body.removeChild(modal);
+                document.body.removeChild(overlay);
+            };
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(modal);
+        }
+
+        // Import JSON - FUNCIÓN MEJORADA
         function importJSON() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -2027,9 +2158,10 @@
                             renderDeleteFolderDropdown();
                             renderNotes();
                             saveToStorage();
-                            alert('Datos importados correctamente.');
+                            
+                            alert('✅ Datos importados correctamente desde: ' + file.name);
                         } catch (err) {
-                            alert('Error al importar JSON. El archivo puede estar corrupto.');
+                            alert('❌ Error al importar JSON. Archivo corrupto o inválido.');
                         }
                     };
                     reader.readAsText(file);
@@ -2039,7 +2171,6 @@
             document.body.appendChild(input);
             input.click();
             
-            // Limpiar después de usar
             setTimeout(() => {
                 document.body.removeChild(input);
             }, 1000);
@@ -2057,6 +2188,13 @@
             renderDeleteFolderDropdown();
             renderNotes();
             setupSwipe();
+            
+            // Mostrar mensaje de bienvenida
+            setTimeout(() => {
+                if (notes.portapapeles.length === 0) {
+                    console.log('✨ Aplicación iniciada correctamente');
+                }
+            }, 1000);
         }
 
         // Start the application

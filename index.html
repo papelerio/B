@@ -162,12 +162,34 @@
             text-align: left;
             cursor: pointer;
             border-radius: 4px;
+            transition: background-color 0.3s ease;
         }
 
         .cloud-btn {
             background: #FFD700 !important;
             color: #000 !important;
             font-weight: bold;
+        }
+
+        /* Success flash animation */
+        .success-flash {
+            background: #4CAF50 !important;
+            color: #fff !important;
+            animation: flash 0.3s ease-in-out;
+        }
+
+        @keyframes flash {
+            0% { 
+                background: #4CAF50 !important;
+                transform: scale(1);
+            }
+            50% { 
+                transform: scale(1.05);
+            }
+            100% { 
+                background: #4CAF50 !important;
+                transform: scale(1);
+            }
         }
 
         /* Folders tabs */
@@ -200,6 +222,91 @@
 
         .folder-tab.active {
             background: #007AFF;
+        }
+
+        /* Folders Options Modal */
+        #folders-options-modal .modal-content {
+            padding: 20px;
+        }
+
+        .add-folder-btn-in-modal {
+            background: #007AFF;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .folders-list {
+            flex: 1;
+            padding: 0;
+            overflow-y: auto;
+            background: #000;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .folder-item {
+            background: #111;
+            margin-bottom: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #007AFF;
+            cursor: move;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .folder-item:hover {
+            background: #222;
+        }
+
+        .folder-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .folder-placeholder {
+            background: #222;
+            height: 60px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            border: 2px dashed #007AFF;
+            animation: pulse 1s infinite;
+        }
+
+        .folder-name {
+            font-size: var(--base-font-size);
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .folder-drag-handle {
+            background: #FFD700;
+            border-radius: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            border: none;
+            color: #000;
+            font-size: 18px;
+            font-weight: bold;
+            touch-action: none;
+        }
+
+        .folder-drag-handle:active {
+            cursor: grabbing;
         }
 
         /* Notes list */
@@ -799,61 +906,6 @@
         .example-notes .note-menu-section {
             opacity: 0.5;
         }
-
-        /* Nuevos estilos para opciones de exportación */
-        .export-options-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .export-option-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 15px;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .export-option-btn:hover {
-            background: #222;
-            border-color: #007AFF;
-        }
-
-        .export-option-btn .icon {
-            font-size: 20px;
-            width: 24px;
-            text-align: center;
-        }
-
-        .export-option-btn .text {
-            flex: 1;
-            text-align: left;
-        }
-
-        .export-option-btn .subtext {
-            font-size: 12px;
-            color: #888;
-            margin-top: 2px;
-        }
-
-        .export-section-title {
-            font-size: 16px;
-            color: #007AFF;
-            margin: 20px 0 10px 0;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #333;
-        }
-
-        .export-section-title:first-child {
-            margin-top: 0;
-        }
     </style>
 </head>
 <body>
@@ -873,9 +925,9 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <button class="close-btn" onclick="toggleSidebar()">X</button>
-        <button class="sidebar-btn" onclick="showExportOptions()">📤 Opciones de Exportación</button>
-        <button class="sidebar-btn" onclick="importJSON()">📥 Importar JSON</button>
-        <button class="sidebar-btn" onclick="showAddFolderModal()">📁 Añadir carpeta nueva</button>
+        <button class="sidebar-btn" onclick="uploadToFirebase(event)">📤 Subir a Firebase</button>
+        <button class="sidebar-btn" onclick="loadFromFirebase(event)">📥 Cargar configuración de Firebase</button>
+        <button class="sidebar-btn" onclick="showFoldersOptions()">📁 Opciones de carpetas</button>
         <button class="sidebar-btn" onclick="showDeleteFolderModal()">🗑️ Eliminar carpeta</button>
         <button class="sidebar-btn" onclick="showSettingsModal()">⚙️ Configuraciones</button>
         <button class="cloud-btn" onclick="loadCloudConfig()">☁️ Usar configuración de la nube</button>
@@ -934,6 +986,20 @@
                         </select>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folders Options Modal -->
+    <div class="modal" id="folders-options-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeFoldersOptionsModal()">×</button>
+                <div class="modal-title">Opciones de Carpetas</div>
+            </div>
+            <button class="add-folder-btn-in-modal" onclick="showAddFolderModal()">Añadir carpeta nueva</button>
+            <div class="folders-list" id="folders-list">
+                <!-- Folders will be populated by JS -->
             </div>
         </div>
     </div>
@@ -1084,56 +1150,26 @@
         </div>
     </div>
 
-    <!-- Export Options Modal -->
-    <div class="modal" id="export-options-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="modal-close" onclick="closeExportOptionsModal()">×</button>
-                <div class="modal-title">Opciones de Exportación</div>
-            </div>
-            <div class="form-section">
-                <div class="export-section-title">Métodos de Exportación</div>
-                <div class="export-options-grid">
-                    <button class="export-option-btn" onclick="downloadJSON()">
-                        <div class="icon">📥</div>
-                        <div class="text">
-                            Descargar archivo JSON
-                            <div class="subtext">Guarda un archivo .json en tu dispositivo</div>
-                        </div>
-                    </button>
-                    
-                    <button class="export-option-btn" onclick="copyJSONToClipboard()">
-                        <div class="icon">📋</div>
-                        <div class="text">
-                            Copiar JSON al portapapeles
-                            <div class="subtext">Copia los datos para pegarlos en cualquier app</div>
-                        </div>
-                    </button>
-                    
-                    <button class="export-option-btn" onclick="shareJSON()">
-                        <div class="icon">↗️</div>
-                        <div class="text">
-                            Compartir JSON
-                            <div class="subtext">Comparte vía WhatsApp, Gmail, etc.</div>
-                        </div>
-                    </button>
-                </div>
-                
-                <div class="export-section-title">Envío Directo</div>
-                <div class="export-options-grid">
-                    <button class="export-option-btn" onclick="sendJSONToDeveloper()">
-                        <div class="icon">📧</div>
-                        <div class="text">
-                            Enviar JSON al desarrollador
-                            <div class="subtext">Envía tus datos directamente por email</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaVcUDJC8W-n-TNW3eeHKQjBN-jvbi7K4",
+            authDomain: "papelerio.firebaseapp.com",
+            databaseURL: "https://papelerio-default-rtdb.firebaseio.com",
+            projectId: "papelerio",
+            storageBucket: "papelerio.firebasestorage.app",
+            messagingSenderId: "196537298529",
+            appId: "1:196537298529:web:b93b3dcaa3962fa0b88420"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         // Data structures
         let folders = ['portapapeles'];
         let notes = { portapapeles: [] };
@@ -1151,24 +1187,33 @@
         let searchMode = 'current'; // 'current' or 'all'
         let searchQuery = '';
 
-        // Variables para drag-and-drop
+        // Variables para drag-and-drop de notas
         let dragNoteIndex = null;
         let dragPlaceholder = null;
         let dragStartY = 0;
         let currentDragY = 0;
         let autoScrollInterval = null;
+        let dragOffsetY = 0; // Nuevo: offset inicial para mantener la posición relativa
 
-        // Variables para swipe entre carpetas - MEJORADO
+        // Variables para drag-and-drop de carpetas
+        let dragFolderIndex = null;
+        let dragFolderPlaceholder = null;
+        let dragFolderStartY = 0;
+        let currentDragFolderY = 0;
+        let autoScrollFolderInterval = null;
+        let dragFolderOffsetY = 0; // Nuevo: offset inicial para carpetas
+
+        // Variables para swipe entre carpetas
         let swipeStartX = 0;
         let swipeStartY = 0;
         let swipeCurrentX = 0;
         let swipeCurrentY = 0;
         let isSwiping = false;
-        let swipeThreshold = 50; // Mínimo de movimiento para considerar swipe
-        let verticalScrollThreshold = 10; // Umbral para detectar scroll vertical
+        let swipeThreshold = 50;
+        let verticalScrollThreshold = 10;
 
         // Stack para manejar el historial de navegación
-        let navigationStack = ['main']; // Comienza en la vista principal
+        let navigationStack = ['main'];
 
         // Prevenir zoom y comportamiento no deseado
         document.addEventListener('touchstart', function(e) {
@@ -1189,7 +1234,7 @@
             e.preventDefault();
         });
 
-        // App back action (for buttons in app, never exit)
+        // App back action
         function appHandleBack() {
             if (navigationStack.length > 1) {
                 navigationStack.pop();
@@ -1199,7 +1244,6 @@
                 
                 switch(previousView) {
                     case 'main':
-                        // Ya estamos en la vista principal
                         break;
                     case 'add-modal':
                         addNote();
@@ -1221,34 +1265,30 @@
                     case 'settings-modal':
                         showSettingsModal();
                         break;
+                    case 'folders-options-modal':
+                        showFoldersOptions();
+                        break;
                     case 'confirm-modal':
-                        // For confirm, just close it without re-opening
                         document.getElementById('confirm-modal').classList.remove('open');
-                        navigationStack.pop(); // Extra pop if needed
+                        navigationStack.pop();
                         break;
-                    case 'export-options-modal':
-                        showExportOptions();
-                        break;
-                }
-            } // else do nothing (in main)
-        }
-
-        // System back action (for phone back, show exit confirm when in main)
-        function handleBackAction() {
-            if (navigationStack.length > 1) {
-                appHandleBack();
-            } else {
-                // Si no hay más vistas en el stack, salir de la app
-                if (confirm('¿Deseas salir de la aplicación?')) {
-                    // Para PWA, puedes usar window.close() o simplemente no hacer nada
-                    // ya que en móvil no se puede cerrar la app desde JS
                 }
             }
         }
 
-        // Función para agregar vista al stack de navegación
+        // System back action
+        function handleBackAction() {
+            if (navigationStack.length > 1) {
+                appHandleBack();
+            } else {
+                if (confirm('¿Deseas salir de la aplicación?')) {
+                    // En PWA no se puede cerrar directamente
+                }
+            }
+        }
+
+        // Agregar vista al stack
         function pushToNavigationStack(view) {
-            // No agregar duplicados consecutivos
             if (navigationStack[navigationStack.length - 1] !== view) {
                 navigationStack.push(view);
             }
@@ -1260,17 +1300,16 @@
             modals.forEach(modal => {
                 modal.classList.remove('open');
             });
-            // También cerrar sidebar si está abierto
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
             sidebar.classList.remove('open');
             overlay.classList.remove('open');
         }
 
-        // Prevenir pull-to-refresh y manejar touch events - VERSIÓN MEJORADA
+        // Prevenir pull-to-refresh
         document.addEventListener('touchmove', function(e) {
             if (e.touches.length > 1) {
-                e.preventDefault(); // Prevenir zoom con múltiples dedos
+                e.preventDefault();
                 return;
             }
             
@@ -1278,23 +1317,20 @@
             const isScrollable = target.closest('.notes-list') || 
                                 target.closest('.modal-content') || 
                                 target.closest('.folders') ||
-                                target.closest('.form-textarea');
+                                target.closest('.form-textarea') ||
+                                target.closest('.folders-list');
             
-            // Solo prevenir el comportamiento por defecto en elementos no desplazables
-            // y solo cuando estemos cerca del top para evitar pull-to-refresh
             if (!isScrollable && e.touches[0].clientY < 50) {
                 e.preventDefault();
             }
         }, { passive: false });
 
-        // Manejar el evento de botón back del navegador/telefono
+        // Manejar botón back
         window.addEventListener('popstate', function(e) {
             handleBackAction();
-            // Prevenir que el navegador navegue hacia atrás
             history.pushState(null, null, window.location.href);
         });
 
-        // Inicializar el estado de navegación
         history.replaceState(null, null, window.location.href);
         history.pushState(null, null, window.location.href);
 
@@ -1325,7 +1361,7 @@
             }
         }
 
-        // Initialize font size from localStorage
+        // Initialize font size
         function initializeFontSize() {
             const savedSize = localStorage.getItem('noteFontSize') || '16';
             document.documentElement.style.setProperty('--base-font-size', savedSize + 'px');
@@ -1395,6 +1431,17 @@
             ).join('');
         }
 
+        // Render folders list in options modal
+        function renderFoldersList() {
+            const foldersListEl = document.getElementById('folders-list');
+            foldersListEl.innerHTML = folders.map((folder, i) => `
+                <div class="folder-item" data-index="${i}">
+                    <div class="folder-name">${escapeHtml(folder)}</div>
+                    <button class="folder-drag-handle" onpointerdown="startFolderDrag(${i}, event)" title="Reorganizar carpeta">↕</button>
+                </div>
+            `).join('');
+        }
+
         // Switch folder with animation
         function switchFolder(folder, direction = null) {
             const notesList = document.getElementById('notes-list');
@@ -1409,7 +1456,7 @@
                     renderNotes();
                     notesList.style.transition = 'none';
                     notesList.style.transform = `translateX(${translateFrom})`;
-                    void notesList.offsetWidth; // Reflow
+                    void notesList.offsetWidth;
                     notesList.style.transition = 'transform 0.3s ease';
                     notesList.style.transform = 'translateX(0)';
                 }, 300);
@@ -1452,12 +1499,17 @@
             }
         }
 
-        // Start drag
+        // Start drag for notes
         function startDrag(index, event) {
             event.preventDefault();
             dragNoteIndex = index;
-            dragStartY = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
             const noteEl = document.querySelector(`.note[data-index="${index}"]`);
+            const rect = noteEl.getBoundingClientRect();
+            const notesList = document.getElementById('notes-list');
+            const listRect = notesList.getBoundingClientRect();
+            dragStartY = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
+            // Calcular el offset relativo al top del elemento
+            dragOffsetY = dragStartY - rect.top;
             noteEl.classList.add('dragging');
 
             // Crear placeholder
@@ -1474,16 +1526,23 @@
             startAutoScroll();
         }
 
-        // On drag move
+        // On drag move for notes
         function onDragMove(event) {
             if (dragNoteIndex === null) return;
             event.preventDefault();
             currentDragY = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
             const notesList = document.getElementById('notes-list');
             const dragNoteEl = document.querySelector('.note.dragging');
-            const deltaY = currentDragY - dragStartY;
-
-            dragNoteEl.style.transform = `translateY(${deltaY}px)`;
+            const listRect = notesList.getBoundingClientRect();
+            
+            // Calcular la posición relativa al contenedor
+            const deltaY = currentDragY - dragOffsetY - listRect.top + notesList.scrollTop;
+            
+            // Limitar el movimiento dentro del contenedor
+            const maxY = notesList.scrollHeight - dragNoteEl.offsetHeight;
+            const constrainedY = Math.max(0, Math.min(deltaY, maxY));
+            
+            dragNoteEl.style.transform = `translateY(${constrainedY}px)`;
 
             // Encontrar posición para placeholder
             const notes = Array.from(notesList.querySelectorAll('.note:not(.dragging)'));
@@ -1501,36 +1560,32 @@
             notesList.insertBefore(dragPlaceholder, targetNote);
         }
 
-        // Start auto scroll
+        // Start auto scroll for notes
         function startAutoScroll() {
             stopAutoScroll();
             autoScrollInterval = setInterval(() => {
                 if (dragNoteIndex === null) return;
                 const notesList = document.getElementById('notes-list');
                 const rect = notesList.getBoundingClientRect();
-                const edgeTop = 100; // Distancia desde el borde superior
-                const edgeBottom = 100; // Distancia desde el borde inferior
+                const edgeTop = 100;
+                const edgeBottom = 100;
                 let scrollSpeed = 0;
 
                 if (currentDragY < rect.top + edgeTop) {
-                    // Cerca del top, scroll up
                     const distance = (rect.top + edgeTop - currentDragY) / edgeTop;
-                    scrollSpeed = -Math.min(20, 10 * distance); // Máx 20px por frame
+                    scrollSpeed = -Math.min(20, 10 * distance);
                 } else if (currentDragY > rect.bottom - edgeBottom) {
-                    // Cerca del bottom, scroll down
                     const distance = (currentDragY - (rect.bottom - edgeBottom)) / edgeBottom;
                     scrollSpeed = Math.min(20, 10 * distance);
                 }
 
                 if (scrollSpeed !== 0) {
                     notesList.scrollTop += scrollSpeed;
-                    // Actualizar posición del dragged note para que siga el dedo
-                    dragStartY += scrollSpeed;
                 }
-            }, 16); // ~60fps
+            }, 16);
         }
 
-        // Stop auto scroll
+        // Stop auto scroll for notes
         function stopAutoScroll() {
             if (autoScrollInterval) {
                 clearInterval(autoScrollInterval);
@@ -1538,7 +1593,7 @@
             }
         }
 
-        // On drag end
+        // On drag end for notes
         function onDragEnd(event) {
             if (dragNoteIndex === null) return;
             stopAutoScroll();
@@ -1558,6 +1613,7 @@
             dragPlaceholder.remove();
             dragPlaceholder = null;
             dragNoteIndex = null;
+            dragOffsetY = 0;
             saveToStorage();
             renderNotes();
 
@@ -1566,7 +1622,131 @@
             document.removeEventListener('pointercancel', onDragEnd);
         }
 
-        // Setup swipe for folder change - VERSIÓN MEJORADO
+        // Start drag for folders
+        function startFolderDrag(index, event) {
+            event.preventDefault();
+            dragFolderIndex = index;
+            const folderEl = document.querySelector(`.folder-item[data-index="${index}"]`);
+            const rect = folderEl.getBoundingClientRect();
+            const foldersList = document.getElementById('folders-list');
+            const listRect = foldersList.getBoundingClientRect();
+            dragFolderStartY = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
+            // Calcular el offset relativo al top del elemento
+            dragFolderOffsetY = dragFolderStartY - rect.top;
+            folderEl.classList.add('dragging');
+
+            // Crear placeholder
+            dragFolderPlaceholder = document.createElement('div');
+            dragFolderPlaceholder.classList.add('folder-placeholder');
+            folderEl.parentNode.insertBefore(dragFolderPlaceholder, folderEl.nextSibling);
+
+            // Eventos
+            document.addEventListener('pointermove', onFolderDragMove);
+            document.addEventListener('pointerup', onFolderDragEnd);
+            document.addEventListener('pointercancel', onFolderDragEnd);
+
+            // Iniciar auto-scroll
+            startAutoScrollFolders();
+        }
+
+        // On drag move for folders
+        function onFolderDragMove(event) {
+            if (dragFolderIndex === null) return;
+            event.preventDefault();
+            currentDragFolderY = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
+            const foldersList = document.getElementById('folders-list');
+            const dragFolderEl = document.querySelector('.folder-item.dragging');
+            const listRect = foldersList.getBoundingClientRect();
+            
+            // Calcular la posición relativa al contenedor
+            const deltaY = currentDragFolderY - dragFolderOffsetY - listRect.top + foldersList.scrollTop;
+            
+            // Limitar el movimiento dentro del contenedor
+            const maxY = foldersList.scrollHeight - dragFolderEl.offsetHeight;
+            const constrainedY = Math.max(0, Math.min(deltaY, maxY));
+            
+            dragFolderEl.style.transform = `translateY(${constrainedY}px)`;
+
+            // Encontrar posición para placeholder
+            const folderItems = Array.from(foldersList.querySelectorAll('.folder-item:not(.dragging)'));
+            let insertIndex = 0;
+            for (let i = 0; i < folderItems.length; i++) {
+                const rect = folderItems[i].getBoundingClientRect();
+                if (currentDragFolderY < rect.top + rect.height / 2) {
+                    insertIndex = i;
+                    break;
+                }
+                insertIndex = i + 1;
+            }
+
+            const targetFolder = folderItems[insertIndex] || null;
+            foldersList.insertBefore(dragFolderPlaceholder, targetFolder);
+        }
+
+        // Start auto scroll for folders
+        function startAutoScrollFolders() {
+            stopAutoScrollFolders();
+            autoScrollFolderInterval = setInterval(() => {
+                if (dragFolderIndex === null) return;
+                const foldersList = document.getElementById('folders-list');
+                const rect = foldersList.getBoundingClientRect();
+                const edgeTop = 100;
+                const edgeBottom = 100;
+                let scrollSpeed = 0;
+
+                if (currentDragFolderY < rect.top + edgeTop) {
+                    const distance = (rect.top + edgeTop - currentDragFolderY) / edgeTop;
+                    scrollSpeed = -Math.min(20, 10 * distance);
+                } else if (currentDragFolderY > rect.bottom - edgeBottom) {
+                    const distance = (currentDragFolderY - (rect.bottom - edgeBottom)) / edgeBottom;
+                    scrollSpeed = Math.min(20, 10 * distance);
+                }
+
+                if (scrollSpeed !== 0) {
+                    foldersList.scrollTop += scrollSpeed;
+                }
+            }, 16);
+        }
+
+        // Stop auto scroll for folders
+        function stopAutoScrollFolders() {
+            if (autoScrollFolderInterval) {
+                clearInterval(autoScrollFolderInterval);
+                autoScrollFolderInterval = null;
+            }
+        }
+
+        // On drag end for folders
+        function onFolderDragEnd(event) {
+            if (dragFolderIndex === null) return;
+            stopAutoScrollFolders();
+            const foldersList = document.getElementById('folders-list');
+            const dragFolderEl = document.querySelector('.folder-item.dragging');
+            dragFolderEl.classList.remove('dragging');
+            dragFolderEl.style.transform = '';
+
+            // Encontrar nuevo índice
+            const children = Array.from(foldersList.children);
+            const placeholderIndex = children.indexOf(dragFolderPlaceholder);
+
+            // Mover en array
+            const [movedFolder] = folders.splice(dragFolderIndex, 1);
+            folders.splice(placeholderIndex > dragFolderIndex ? placeholderIndex - 1 : placeholderIndex, 0, movedFolder);
+
+            dragFolderPlaceholder.remove();
+            dragFolderPlaceholder = null;
+            dragFolderIndex = null;
+            dragFolderOffsetY = 0;
+            saveToStorage();
+            renderFoldersList();
+            renderFolders();
+
+            document.removeEventListener('pointermove', onFolderDragMove);
+            document.removeEventListener('pointerup', onFolderDragEnd);
+            document.removeEventListener('pointercancel', onFolderDragEnd);
+        }
+
+        // Setup swipe for folder change
         function setupSwipe() {
             const notesList = document.getElementById('notes-list');
             
@@ -1574,7 +1754,7 @@
                 if (dragNoteIndex !== null) return;
                 swipeStartX = e.touches[0].clientX;
                 swipeStartY = e.touches[0].clientY;
-                isSwiping = false; // Inicialmente no estamos haciendo swipe
+                isSwiping = false;
                 notesList.style.transition = 'none';
             }, { passive: true });
 
@@ -1587,22 +1767,17 @@
                 const deltaX = swipeCurrentX - swipeStartX;
                 const deltaY = swipeCurrentY - swipeStartY;
                 
-                // Si aún no hemos determinado si es un swipe horizontal o scroll vertical
                 if (!isSwiping) {
-                    // Si el movimiento vertical es mayor que el horizontal, es scroll vertical
                     if (Math.abs(deltaY) > verticalScrollThreshold && Math.abs(deltaY) > Math.abs(deltaX)) {
-                        // Es scroll vertical, permitir que continúe normalmente
                         isSwiping = false;
                         return;
                     }
-                    // Si el movimiento horizontal es significativo, es swipe
                     if (Math.abs(deltaX) > swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
                         isSwiping = true;
-                        e.preventDefault(); // Solo prevenir cuando sea swipe horizontal
+                        e.preventDefault();
                     }
                 }
                 
-                // Si estamos en modo swipe, aplicar la transformación
                 if (isSwiping) {
                     e.preventDefault();
                     notesList.style.transform = `translateX(${deltaX}px)`;
@@ -1616,7 +1791,7 @@
                 const currentIndex = folders.indexOf(currentFolder);
                 notesList.style.transition = 'transform 0.3s ease';
                 
-                if (Math.abs(deltaX) > window.innerWidth / 4) { // Reducir el umbral para hacerlo más sensible
+                if (Math.abs(deltaX) > window.innerWidth / 4) {
                     let newFolder;
                     let direction;
                     if (deltaX > 0 && currentIndex > 0) {
@@ -1632,7 +1807,6 @@
                         return;
                     }
                 }
-                // Snap back
                 notesList.style.transform = 'translateX(0)';
                 isSwiping = false;
             }, { passive: true });
@@ -1677,6 +1851,80 @@
             copyNoteContent(currentContent);
         }
 
+        // Get JSON data
+        function getJSONData() {
+            return {
+                folders, 
+                notes,
+                currentFolder,
+                timestamp: new Date().toISOString(),
+                version: "1.0"
+            };
+        }
+
+        // Subir a Firebase
+        async function uploadToFirebase(event) {
+            try {
+                const data = getJSONData();
+                await db.ref('/data').set(data);
+                const uploadBtn = event.target;
+                uploadBtn.classList.add('success-flash');
+                setTimeout(() => {
+                    uploadBtn.classList.remove('success-flash');
+                }, 300);
+                alert('Subido a Firebase exitosamente');
+                toggleSidebar();
+            } catch (err) {
+                alert('Error al subir: ' + err.message);
+            }
+        }
+
+        // Cargar desde Firebase
+        async function loadFromFirebase(event) {
+            try {
+                const snapshot = await db.ref('/data').once('value');
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (!data.folders || !data.notes) {
+                        throw new Error('Estructura de datos inválida');
+                    }
+                    folders = data.folders || folders;
+                    notes = data.notes || notes;
+                    currentFolder = data.currentFolder || currentFolder;
+                    renderFolders();
+                    renderFolderDropdown();
+                    renderDeleteFolderDropdown();
+                    renderNotes();
+                    saveToStorage();
+                    const loadBtn = event.target;
+                    loadBtn.classList.add('success-flash');
+                    setTimeout(() => {
+                        loadBtn.classList.remove('success-flash');
+                    }, 300);
+                    alert('Cargado desde Firebase exitosamente');
+                } else {
+                    alert('No hay datos en Firebase');
+                }
+                toggleSidebar();
+            } catch (err) {
+                alert('Error al cargar: ' + err.message);
+            }
+        }
+
+        // Show folders options modal
+        function showFoldersOptions() {
+            document.getElementById('folders-options-modal').classList.add('open');
+            renderFoldersList();
+            toggleSidebar();
+            pushToNavigationStack('folders-options-modal');
+        }
+
+        // Close folders options modal
+        function closeFoldersOptionsModal() {
+            document.getElementById('folders-options-modal').classList.remove('open');
+            navigationStack.pop();
+        }
+
         // Add note
         function addNote() {
             isEdit = false;
@@ -1694,7 +1942,7 @@
         // Close add note modal
         function closeModal() {
             document.getElementById('add-modal').classList.remove('open');
-            navigationStack.pop(); // Remover del stack
+            navigationStack.pop();
         }
 
         // Save note
@@ -1735,7 +1983,6 @@
             renderNotes();
             saveToStorage();
             closeModal();
-            window.location.reload();
         }
 
         // Edit note
@@ -1750,14 +1997,12 @@
             document.getElementById('note-content').value = note.content;
             document.getElementById('char-count').textContent = note.content.length;
             
-            // Para edición, deshabilitar selector de carpeta
             document.getElementById('note-folder').value = folder;
             document.getElementById('note-folder').disabled = true;
             
             document.getElementById('modal-title').textContent = 'Editar nota';
             renderFolderDropdown();
             
-            // Cerrar otros modals abiertos
             closeSearchModal();
             closeViewModal();
             
@@ -1795,13 +2040,13 @@
             const originalFolder = currentFolder;
             currentFolder = folder;
             viewNote(index);
-            currentFolder = originalFolder; // Restaurar carpeta original
+            currentFolder = originalFolder;
         }
 
         // Close view modal
         function closeViewModal() {
             document.getElementById('view-modal').classList.remove('open');
-            navigationStack.pop(); // Remover del stack
+            navigationStack.pop();
         }
 
         // Edit from view
@@ -1879,7 +2124,7 @@
         // Close search modal
         function closeSearchModal() {
             document.getElementById('search-modal').classList.remove('open');
-            navigationStack.pop(); // Remover del stack
+            navigationStack.pop();
         }
 
         // Show note menu
@@ -1932,7 +2177,7 @@
         // Close confirm modal
         function closeConfirmModal() {
             document.getElementById('confirm-modal').classList.remove('open');
-            navigationStack.pop(); // Remover del stack
+            navigationStack.pop();
         }
 
         // Delete selected folder
@@ -1947,6 +2192,7 @@
             renderNotes();
             renderFolderDropdown();
             renderDeleteFolderDropdown();
+            renderFoldersList();
             saveToStorage();
             closeDeleteFolderModal();
         }
@@ -1954,7 +2200,6 @@
         // Load cloud config
         async function loadCloudConfig() {
             try {
-                // Show loading state
                 const cloudBtn = document.querySelector('.cloud-btn');
                 const originalText = cloudBtn.textContent;
                 cloudBtn.innerHTML = '<span class="loading"></span> Cargando...';
@@ -1970,82 +2215,60 @@
                 renderFolders();
                 renderFolderDropdown();
                 renderDeleteFolderDropdown();
+                renderFoldersList();
                 renderNotes();
                 saveToStorage();
                 
-                // Show success state
                 cloudBtn.textContent = '¡Configuración cargada!';
                 setTimeout(() => {
                     cloudBtn.textContent = originalText;
                 }, 2000);
-                
                 toggleSidebar();
             } catch (err) {
-                alert('Error al cargar configuración de la nube.');
-                const cloudBtn = document.querySelector('.cloud-btn');
-                cloudBtn.textContent = 'Error al cargar';
-                setTimeout(() => {
-                    cloudBtn.textContent = 'usar configuracion de la nube';
-                }, 2000);
+                alert('Error al cargar configuración de la nube: ' + err.message);
+                cloudBtn.textContent = originalText;
             }
         }
 
-        // Document click to hide dropdown
-        document.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('note-dropdown');
-            const searchDropdown = document.getElementById('search-dropdown');
-            if ((dropdown.style.display === 'block' && !dropdown.contains(e.target)) || (searchDropdown.style.display === 'block' && !searchDropdown.contains(e.target))) {
-                hideDropdown();
-            }
-        });
-
         // Show add folder modal
         function showAddFolderModal() {
-            document.getElementById('add-folder-modal').classList.add('open');
             document.getElementById('folder-name').value = '';
-            toggleSidebar();
+            document.getElementById('add-folder-modal').classList.add('open');
             pushToNavigationStack('add-folder-modal');
         }
 
         // Close add folder modal
         function closeAddFolderModal() {
             document.getElementById('add-folder-modal').classList.remove('open');
-            navigationStack.pop(); // Remover del stack
+            navigationStack.pop();
         }
 
         // Save new folder
         function saveNewFolder() {
-            const name = document.getElementById('folder-name').value.trim();
-            
-            if (!name) {
-                alert('El nombre es obligatorio.');
+            const folderName = document.getElementById('folder-name').value.trim();
+            if (!folderName) {
+                alert('El nombre de la carpeta es obligatorio.');
                 return;
             }
-            
-            // Validar nombre (evitar caracteres problemáticos)
-            if (/[<>:"/\\|?*]/.test(name)) {
-                alert('El nombre de la carpeta contiene caracteres no permitidos.');
-                return;
-            }
-            
-            if (folders.includes(name)) {
+            if (folders.includes(folderName)) {
                 alert('Ya existe una carpeta con ese nombre.');
                 return;
             }
-            
-            folders.push(name);
-            notes[name] = [];
+            folders.push(folderName);
+            notes[folderName] = [];
             renderFolders();
             renderFolderDropdown();
             renderDeleteFolderDropdown();
+            renderFoldersList();
             saveToStorage();
             closeAddFolderModal();
+            closeFoldersOptionsModal();
         }
 
         // Show delete folder modal
         function showDeleteFolderModal() {
-            document.getElementById('delete-folder-modal').classList.add('open');
             renderDeleteFolderDropdown();
+            document.getElementById('delete-folder-modal').classList.add('open');
             toggleSidebar();
             pushToNavigationStack('delete-folder-modal');
         }
@@ -2053,13 +2276,14 @@
         // Close delete folder modal
         function closeDeleteFolderModal() {
             document.getElementById('delete-folder-modal').classList.remove('open');
-            navigationStack.pop(); // Remover del stack
+            navigationStack.pop();
         }
 
         // Show settings modal
         function showSettingsModal() {
-            document.getElementById('settings-modal').classList.add('open');
+            initializeFontSize();
             initializeToggles();
+            document.getElementById('settings-modal').classList.add('open');
             toggleSidebar();
             pushToNavigationStack('settings-modal');
         }
@@ -2070,217 +2294,46 @@
             navigationStack.pop();
         }
 
-        // Character count
-        document.getElementById('note-content').addEventListener('input', function() {
-            const count = this.value.length;
-            document.getElementById('char-count').textContent = count;
-        });
-
-        // Sidebar functions
+        // Toggle sidebar
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
             sidebar.classList.toggle('open');
             overlay.classList.toggle('open');
-        }
-
-        // ========== NUEVAS FUNCIONES DE EXPORTACIÓN MEJORADAS ==========
-
-        // Mostrar modal de opciones de exportación
-        function showExportOptions() {
-            document.getElementById('export-options-modal').classList.add('open');
-            pushToNavigationStack('export-options-modal');
-            toggleSidebar();
-        }
-
-        // Cerrar modal de opciones de exportación
-        function closeExportOptionsModal() {
-            document.getElementById('export-options-modal').classList.remove('open');
-            navigationStack.pop();
-        }
-
-        // Función para obtener datos JSON
-        function getJSONData() {
-            return {
-                folders, 
-                notes,
-                currentFolder,
-                timestamp: new Date().toISOString(),
-                version: "1.0"
-            };
-        }
-
-        // 1. Descargar archivo JSON (método original mejorado)
-        function downloadJSON() {
-            const data = getJSONData();
-            const jsonString = JSON.stringify(data, null, 2);
-            const fileName = `portapapeles_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-            
-            try {
-                // Intentar descarga normal
-                const blob = new Blob([jsonString], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = fileName;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    closeExportOptionsModal();
-                    showSuccessMessage('Archivo JSON descargado', 'Revisa tu carpeta de descargas');
-                }, 100);
-            } catch (error) {
-                // Fallback: copiar al portapapeles
-                console.error('Error en descarga:', error);
-                copyJSONToClipboard();
+            if (!sidebar.classList.contains('open')) {
+                hideDropdown();
             }
         }
 
-        // 2. Copiar JSON al portapapeles
-        function copyJSONToClipboard() {
-            const data = getJSONData();
-            const jsonString = JSON.stringify(data, null, 2);
-            
-            navigator.clipboard.writeText(jsonString).then(() => {
-                closeExportOptionsModal();
-                showSuccessMessage('JSON copiado', 'Los datos están listos para pegar en cualquier app');
-            }).catch(err => {
-                // Fallback manual
-                const textarea = document.createElement('textarea');
-                textarea.value = jsonString;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                closeExportOptionsModal();
-                showSuccessMessage('JSON copiado', 'Los datos fueron copiados manualmente');
-            });
+        // Update char count
+        function updateCharCount() {
+            const textarea = document.getElementById('note-content');
+            document.getElementById('char-count').textContent = textarea.value.length;
         }
 
-        // 3. Compartir JSON
-        function shareJSON() {
-            const data = getJSONData();
-            const jsonString = JSON.stringify(data, null, 2);
-            const fileName = `portapapeles_${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-            
-            if (navigator.share) {
-                // Usar Web Share API si está disponible
-                navigator.share({
-                    title: 'Datos del Portapapeles',
-                    text: 'Mis datos exportados del administrador del portapapeles',
-                    files: [
-                        new File([jsonString], fileName, { 
-                            type: 'application/json' 
-                        })
-                    ]
-                }).then(() => {
-                    closeExportOptionsModal();
-                    console.log('Compartido exitosamente');
-                }).catch(err => {
-                    console.log('Error al compartir:', err);
-                    // Fallback a copiar al portapapeles
-                    copyJSONToClipboard();
-                });
-            } else {
-                // Fallback para navegadores que no soportan compartir
-                alert('Tu navegador no soporta compartir archivos. Se ha copiado al portapapeles.');
-                copyJSONToClipboard();
-            }
-        }
-
-        // 4. Enviar JSON al desarrollador
-        function sendJSONToDeveloper() {
-            const data = getJSONData();
-            const jsonString = JSON.stringify(data, null, 2);
-            
-            const subject = "Datos Exportados - Administrador del Portapapeles";
-            const body = `${jsonString}`;
-            const email = "Leandroperezm14@gmail.com";
-            
-            window.open(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-            closeExportOptionsModal();
-            showSuccessMessage('Email abierto', 'Completa el envío en tu app de correo');
-        }
-
-        // Función para mostrar mensajes de éxito
-        function showSuccessMessage(title, message) {
-            // Podrías implementar un toast o alert personalizado aquí
-            alert(`✅ ${title}\n\n${message}`);
-        }
-
-        // Import JSON (función existente mejorada)
-        function importJSON() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.style.display = 'none';
-            
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        try {
-                            const data = JSON.parse(e.target.result);
-                            
-                            // Validar estructura básica del JSON
-                            if (!data.folders || !data.notes) {
-                                throw new Error('Estructura de archivo inválida');
-                            }
-                            
-                            folders = data.folders || folders;
-                            notes = data.notes || notes;
-                            currentFolder = data.currentFolder || currentFolder;
-                            renderFolders();
-                            renderFolderDropdown();
-                            renderDeleteFolderDropdown();
-                            renderNotes();
-                            saveToStorage();
-                            
-                            showSuccessMessage('Importación exitosa', `Datos importados desde: ${file.name}`);
-                        } catch (err) {
-                            alert('❌ Error al importar JSON. El archivo puede estar corrupto o tener formato inválido.');
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-            
-            document.body.appendChild(input);
-            input.click();
-            
-            setTimeout(() => {
-                document.body.removeChild(input);
-            }, 1000);
-            
-            toggleSidebar();
-        }
-
-        // Initialize
-        function init() {
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
             loadFromStorage();
             initializeData();
             initializeFontSize();
+            initializeToggles();
             renderFolders();
+            renderNotes();
             renderFolderDropdown();
             renderDeleteFolderDropdown();
-            renderNotes();
             setupSwipe();
-            
-            // Mostrar mensaje de bienvenida
-            setTimeout(() => {
-                if (notes.portapapeles.length === 0) {
-                    console.log('✨ Aplicación iniciada correctamente');
-                }
-            }, 1000);
-        }
+            document.getElementById('note-content').addEventListener('input', updateCharCount);
+            document.addEventListener('click', hideDropdown);
+        });
 
-        // Start the application
-        init();
+        // Prevent dropdown from closing when clicking inside
+        document.getElementById('note-dropdown').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        document.getElementById('search-dropdown').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
     </script>
 </body>
 </html>

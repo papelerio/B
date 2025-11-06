@@ -9,13 +9,12 @@
         :root {
             --base-font-size: 16px;
         }
-
         /* Prevenir pull-to-refresh y mejorar rendimiento */
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-        
+       
         body {
             overscroll-behavior-y: none;
             overflow: hidden;
@@ -31,14 +30,12 @@
             flex-direction: column;
             touch-action: pan-y;
         }
-
         html {
             overscroll-behavior-y: none;
             background: #000;
             height: 100%;
             overflow: hidden;
         }
-
         /* Prevenir selección de texto y zoom */
         * {
             -webkit-user-select: none;
@@ -49,7 +46,6 @@
             -webkit-text-size-adjust: none;
             text-size-adjust: none;
         }
-
         /* Permitir selección en áreas de texto */
         .form-input, .form-textarea, .note-view-content {
             -webkit-user-select: text;
@@ -57,7 +53,6 @@
             -ms-user-select: text;
             user-select: text;
         }
-
         /* Top navigation */
         .top-nav {
             display: flex;
@@ -68,13 +63,11 @@
             border-bottom: 1px solid #333;
             flex-shrink: 0;
         }
-
         .title {
             font-size: 18px;
             font-weight: bold;
             color: #007AFF;
         }
-
         .menu-btn {
             width: 24px;
             height: 24px;
@@ -83,7 +76,6 @@
             color: #fff;
             cursor: pointer;
         }
-
         .search-btn {
             width: 24px;
             height: 24px;
@@ -93,12 +85,10 @@
             cursor: pointer;
             position: relative;
         }
-
         .search-btn::after {
             content: '🔍';
             font-size: 20px;
         }
-
         /* Sidebar */
         .sidebar {
             position: fixed;
@@ -112,11 +102,9 @@
             padding: 80px 16px 16px;
             box-sizing: border-box;
         }
-
         .sidebar.open {
             left: 0;
         }
-
         .close-btn {
             position: absolute;
             top: 16px;
@@ -131,11 +119,9 @@
             cursor: pointer;
             display: none;
         }
-
         .sidebar.open .close-btn {
             display: block;
         }
-
         .sidebar-overlay {
             position: fixed;
             top: 0;
@@ -146,11 +132,9 @@
             z-index: 999;
             display: none;
         }
-
         .sidebar.open + .sidebar-overlay {
             display: block;
         }
-
         .sidebar-btn {
             display: block;
             width: 100%;
@@ -164,34 +148,30 @@
             border-radius: 4px;
             transition: background-color 0.3s ease;
         }
-
         .cloud-btn {
             background: #FFD700 !important;
             color: #000 !important;
             font-weight: bold;
         }
-
         /* Success flash animation */
         .success-flash {
             background: #4CAF50 !important;
             color: #fff !important;
             animation: flash 0.3s ease-in-out;
         }
-
         @keyframes flash {
-            0% { 
+            0% {
                 background: #4CAF50 !important;
                 transform: scale(1);
             }
-            50% { 
+            50% {
                 transform: scale(1.05);
             }
-            100% { 
+            100% {
                 background: #4CAF50 !important;
                 transform: scale(1);
             }
         }
-
         /* Folders tabs */
         .folders {
             display: flex;
@@ -203,11 +183,9 @@
             -ms-overflow-style: none;
             flex-shrink: 0;
         }
-
         .folders::-webkit-scrollbar {
             display: none;
         }
-
         .folder-tab {
             flex: 0 0 auto;
             padding: 8px 16px;
@@ -219,16 +197,13 @@
             cursor: pointer;
             white-space: nowrap;
         }
-
         .folder-tab.active {
             background: #007AFF;
         }
-
         /* Folders Options Modal */
         #folders-options-modal .modal-content {
             padding: 20px;
         }
-
         .add-folder-btn-in-modal {
             background: #007AFF;
             color: #fff;
@@ -240,7 +215,6 @@
             margin-bottom: 20px;
             width: 100%;
         }
-
         .folders-list {
             flex: 1;
             padding: 0;
@@ -248,7 +222,6 @@
             background: #000;
             -webkit-overflow-scrolling: touch;
         }
-
         .folder-item {
             background: #111;
             margin-bottom: 16px;
@@ -262,18 +235,15 @@
             align-items: center;
             transition: transform 0.3s ease, opacity 0.3s ease;
         }
-
         .folder-item:hover {
             background: #222;
         }
-
         .folder-item.dragging {
             opacity: 0.5;
             transform: scale(0.95);
             box-shadow: 0 8px 16px rgba(0,0,0,0.3);
             z-index: 100;
         }
-
         .folder-placeholder {
             background: #222;
             height: 60px;
@@ -282,13 +252,11 @@
             border: 2px dashed #007AFF;
             animation: pulse 1s infinite;
         }
-
         .folder-name {
             font-size: var(--base-font-size);
             font-weight: bold;
             color: #fff;
         }
-
         .folder-drag-handle {
             background: #FFD700;
             border-radius: 20px;
@@ -304,11 +272,9 @@
             font-weight: bold;
             touch-action: none;
         }
-
         .folder-drag-handle:active {
             cursor: grabbing;
         }
-
         /* Notes list */
         .notes-list {
             flex: 1;
@@ -319,7 +285,6 @@
             touch-action: pan-y;
             -webkit-overflow-scrolling: touch;
         }
-
         .note {
             background: #111;
             margin-bottom: 16px;
@@ -333,11 +298,9 @@
             align-items: center;
             transition: transform 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease, margin-bottom 0.3s ease;
         }
-
         .note:hover {
             background: #222;
         }
-
         .note.dragging {
             opacity: 0.5;
             transform: scale(0.95);
@@ -345,7 +308,6 @@
             z-index: 100;
             position: relative;
         }
-
         .note-placeholder {
             background: #222;
             height: 80px;
@@ -354,42 +316,35 @@
             border: 2px dashed #007AFF;
             animation: pulse 1s infinite;
         }
-
         @keyframes pulse {
             0% { opacity: 0.5; }
             50% { opacity: 1; }
             100% { opacity: 0.5; }
         }
-
         .note-content-section {
             flex: 1;
         }
-
         .note-title {
             font-size: var(--base-font-size);
             font-weight: bold;
             margin-bottom: 8px;
             color: #fff;
         }
-
         .note-content {
             font-size: calc(var(--base-font-size) * 0.875);
             color: #ccc;
             margin-bottom: 8px;
             line-height: 1.4;
         }
-
         .note-date {
             font-size: calc(var(--base-font-size) * 0.75);
             color: #888;
         }
-
         .note-buttons-section {
             display: flex;
             gap: 8px;
             align-items: center;
         }
-
         .reorder-btn {
             background: #FFD700;
             border-radius: 20px;
@@ -405,11 +360,9 @@
             font-weight: bold;
             touch-action: none;
         }
-
         .reorder-btn:active {
             cursor: grabbing;
         }
-
         .note-menu-section {
             background: #007AFF;
             border-radius: 20px;
@@ -420,7 +373,6 @@
             justify-content: center;
             cursor: pointer;
         }
-
         .note-menu-btn {
             background: none;
             border: none;
@@ -430,12 +382,10 @@
             padding: 0;
             margin: 0;
         }
-
         .note-buttons {
             display: flex;
             gap: 8px;
         }
-
         .note-btn {
             background: #007AFF;
             color: #fff;
@@ -445,7 +395,6 @@
             cursor: pointer;
             font-size: 12px;
         }
-
         /* Add button */
         .add-btn {
             position: fixed;
@@ -462,7 +411,6 @@
             box-shadow: 0 4px 12px rgba(0,122,255,0.3);
             z-index: 100;
         }
-
         /* Modal */
         .modal {
             position: fixed;
@@ -474,11 +422,9 @@
             display: none;
             z-index: 2000;
         }
-
         .modal.open {
             display: flex;
         }
-
         .modal-content {
             background: #000;
             width: 100%;
@@ -490,7 +436,6 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-
         .modal-header, .view-header {
             display: flex;
             justify-content: space-between;
@@ -498,13 +443,11 @@
             margin-bottom: 20px;
             flex-shrink: 0;
         }
-
         .modal-title {
             font-size: 18px;
             font-weight: bold;
             color: #007AFF;
         }
-
         .modal-close, .back-btn {
             background: none;
             border: none;
@@ -512,11 +455,9 @@
             font-size: 24px;
             cursor: pointer;
         }
-
         .back-btn {
             font-size: 18px;
         }
-
         .modal-save {
             background: #007AFF;
             color: #fff;
@@ -526,12 +467,10 @@
             cursor: pointer;
             font-size: 16px;
         }
-
         .view-buttons {
             display: flex;
             gap: 10px;
         }
-
         .view-btn {
             background: #007AFF;
             color: #fff;
@@ -541,33 +480,28 @@
             cursor: pointer;
             font-size: 14px;
         }
-
         .form-section {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
-
         .form-group {
             margin-bottom: 16px;
             flex-shrink: 0;
         }
-
         .form-group.content-group {
             flex: 1;
             display: flex;
             flex-direction: column;
             margin-bottom: 16px;
         }
-
         .form-label {
             display: block;
             font-size: 14px;
             color: #888;
             margin-bottom: 4px;
         }
-
         .form-input, .form-textarea {
             width: 100%;
             background: #111;
@@ -578,11 +512,9 @@
             box-sizing: border-box;
             font-size: 16px;
         }
-
         .form-input {
             height: 40px;
         }
-
         .form-textarea {
             flex: 1;
             overflow-y: auto;
@@ -590,18 +522,15 @@
             min-height: 200px;
             -webkit-overflow-scrolling: touch;
         }
-
         .char-count {
             text-align: right;
             font-size: 12px;
             color: #888;
             margin-top: 4px;
         }
-
         .folder-select {
             position: relative;
         }
-
         .folder-select select {
             width: 100%;
             background: #111;
@@ -618,12 +547,10 @@
             padding-right: 40px;
             height: 40px;
         }
-
         .folder-select select:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-
         /* Search Modal */
         #search-modal .search-input {
             width: 100%;
@@ -635,13 +562,11 @@
             font-size: 16px;
             margin-bottom: 16px;
         }
-
         /* View Note Modal */
         #view-modal .modal-content {
             padding: 20px;
             overflow-y: auto;
         }
-
         .note-view-title {
             font-size: 18px;
             font-weight: bold;
@@ -649,7 +574,6 @@
             word-break: break-word;
             color: #fff;
         }
-
         .note-view-summary {
             font-size: 14px;
             color: #ccc;
@@ -659,20 +583,17 @@
             border-radius: 4px;
             display: none;
         }
-
         .note-view-content {
             font-size: 16px;
             line-height: 1.5;
             white-space: pre-wrap;
             word-break: break-word;
         }
-
         .note-view-date {
             font-size: 12px;
             color: #888;
             margin-top: 16px;
         }
-
         /* Dropdown Menu */
         .dropdown-menu {
             display: none;
@@ -685,7 +606,6 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             width: 150px;
         }
-
         .dropdown-btn {
             display: block;
             width: 100%;
@@ -697,38 +617,31 @@
             cursor: pointer;
             font-size: 14px;
         }
-
         .dropdown-btn:hover {
             background: #222;
         }
-
         .delete-btn {
             color: #ff3b30;
         }
-
         .delete-btn:hover {
             background: #ff3b30;
             color: #fff;
         }
-
         /* Confirm Modal */
         .confirm-modal-content {
             text-align: center;
             max-width: 300px;
             margin: auto;
         }
-
         .confirm-text {
             margin-bottom: 20px;
             font-size: 16px;
         }
-
         .confirm-buttons {
             display: flex;
             gap: 10px;
             justify-content: center;
         }
-
         .confirm-btn {
             padding: 8px 16px;
             border-radius: 4px;
@@ -736,17 +649,14 @@
             font-size: 14px;
             border: none;
         }
-
         .confirm-yes {
             background: #FF3B30;
             color: #fff;
         }
-
         .confirm-no {
             background: #333;
             color: #fff;
         }
-
         /* Estilos para el modo de reorganización */
         .reorder-instructions {
             text-align: center;
@@ -756,28 +666,23 @@
             font-size: 14px;
             display: none;
         }
-
         .search-note-folder {
             font-size: 12px;
             color: #888;
             margin-bottom: 4px;
             font-style: italic;
         }
-
         /* Hide scrollbars */
         *::-webkit-scrollbar {
             width: 4px;
         }
-
         *::-webkit-scrollbar-track {
             background: #111;
         }
-
         *::-webkit-scrollbar-thumb {
             background: #333;
             border-radius: 2px;
         }
-
         /* Loading animation simple */
         .loading {
             display: inline-block;
@@ -788,11 +693,9 @@
             border-top-color: #007AFF;
             animation: spin 1s ease-in-out infinite;
         }
-
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
         /* Settings Modal Styles */
         .settings-section {
             margin-bottom: 20px;
@@ -800,20 +703,17 @@
             background: #111;
             border-radius: 8px;
         }
-
         .settings-label {
             display: block;
             font-size: 14px;
             color: #888;
             margin-bottom: 8px;
         }
-
         .settings-slider-container {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-
         #font-size-slider {
             flex: 1;
             height: 4px;
@@ -822,7 +722,6 @@
             outline: none;
             -webkit-appearance: none;
         }
-
         #font-size-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -832,7 +731,6 @@
             background: #007AFF;
             cursor: pointer;
         }
-
         #font-size-slider::-moz-range-thumb {
             width: 20px;
             height: 20px;
@@ -841,25 +739,21 @@
             cursor: pointer;
             border: none;
         }
-
         .settings-toggle-container {
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-
         .settings-toggle {
             position: relative;
             width: 50px;
             height: 30px;
         }
-
         .settings-toggle input[type="checkbox"] {
             opacity: 0;
             width: 0;
             height: 0;
         }
-
         .settings-toggle label {
             position: absolute;
             cursor: pointer;
@@ -871,11 +765,9 @@
             border-radius: 15px;
             transition: 0.3s;
         }
-
         .settings-toggle input[type="checkbox"]:checked + label {
             background-color: #007AFF;
         }
-
         .settings-toggle label::before {
             position: absolute;
             content: "";
@@ -887,21 +779,17 @@
             border-radius: 50%;
             transition: 0.3s;
         }
-
         .settings-toggle input[type="checkbox"]:checked + label::before {
             transform: translateX(20px);
         }
-
         .example-notes {
             padding: 16px;
             background: #000;
         }
-
         .example-notes .note {
             cursor: default;
             pointer-events: none;
         }
-
         .example-notes .reorder-btn,
         .example-notes .note-menu-section {
             opacity: 0.5;
@@ -915,47 +803,41 @@
         <div class="title">Administrador del portapapeles</div>
         <button class="search-btn" onclick="toggleSearchDropdown(event)"></button>
     </div>
-
     <!-- Search Dropdown -->
     <div id="search-dropdown" class="dropdown-menu">
         <button class="dropdown-btn" onclick="startSearch('current')">Buscar solo en esta carpeta</button>
         <button class="dropdown-btn" onclick="startSearch('all')">Buscar en todas las carpetas</button>
     </div>
-
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <button class="close-btn" onclick="toggleSidebar()">X</button>
         <button class="sidebar-btn" onclick="uploadToFirebase(event)">📤 Subir a Firebase</button>
         <button class="sidebar-btn" onclick="loadFromFirebase(event)">📥 Cargar configuración de Firebase</button>
+        <button class="sidebar-btn" onclick="uploadCurrentFolder(event)">📤 Subir esta carpeta</button>
+        <button class="sidebar-btn" onclick="loadCurrentFolder(event)">📥 Cargar esta carpeta</button>
         <button class="sidebar-btn" onclick="showFoldersOptions()">📁 Opciones de carpetas</button>
         <button class="sidebar-btn" onclick="showDeleteFolderModal()">🗑️ Eliminar carpeta</button>
         <button class="sidebar-btn" onclick="showSettingsModal()">⚙️ Configuraciones</button>
         <button class="cloud-btn" onclick="loadCloudConfig()">☁️ Usar configuración de la nube</button>
     </div>
-
     <!-- Sidebar overlay -->
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
-
     <!-- Folders -->
     <div class="folders" id="folders">
         <!-- Folders will be populated by JS -->
     </div>
-
     <!-- Notes list -->
     <div class="notes-list" id="notes-list">
         <!-- Notes will be populated by JS -->
     </div>
-
     <!-- Add button -->
     <button class="add-btn" onclick="addNote()">+</button>
-
     <!-- Note Dropdown Menu -->
     <div id="note-dropdown" class="dropdown-menu">
         <button class="dropdown-btn" onclick="copyNoteContent(notes[currentFolder][currentMenuIndex].content); hideDropdown();">Copiar al portapapeles</button>
         <button class="dropdown-btn" onclick="editNote(currentFolder, currentMenuIndex); hideDropdown();">Editar nota</button>
         <button class="dropdown-btn delete-btn" onclick="showDeleteNoteConfirm(currentMenuIndex);">Eliminar</button>
     </div>
-
     <!-- Modal for adding/editing note -->
     <div class="modal" id="add-modal">
         <div class="modal-content">
@@ -989,7 +871,6 @@
             </div>
         </div>
     </div>
-
     <!-- Folders Options Modal -->
     <div class="modal" id="folders-options-modal">
         <div class="modal-content">
@@ -1003,7 +884,6 @@
             </div>
         </div>
     </div>
-
     <!-- Search Modal -->
     <div class="modal" id="search-modal">
         <div class="modal-content">
@@ -1017,7 +897,6 @@
             </div>
         </div>
     </div>
-
     <!-- Modal for adding folder -->
     <div class="modal" id="add-folder-modal">
         <div class="modal-content">
@@ -1034,7 +913,6 @@
             </div>
         </div>
     </div>
-
     <!-- Modal for deleting folder -->
     <div class="modal" id="delete-folder-modal">
         <div class="modal-content">
@@ -1056,7 +934,6 @@
             </div>
         </div>
     </div>
-
     <!-- Confirm Delete Modal -->
     <div class="modal" id="confirm-modal">
         <div class="modal-content confirm-modal-content">
@@ -1067,7 +944,6 @@
             </div>
         </div>
     </div>
-
     <!-- Modal for viewing note -->
     <div class="modal" id="view-modal">
         <div class="modal-content">
@@ -1084,7 +960,6 @@
             <div class="note-view-date" id="view-note-date"></div>
         </div>
     </div>
-
     <!-- Settings Modal -->
     <div class="modal" id="settings-modal">
         <div class="modal-content">
@@ -1149,11 +1024,9 @@
             </div>
         </div>
     </div>
-
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
     <script>
         // Firebase Config
         const firebaseConfig = {
@@ -1165,16 +1038,13 @@
             messagingSenderId: "196537298529",
             appId: "1:196537298529:web:b93b3dcaa3962fa0b88420"
         };
-
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
         // Data structures
         let folders = ['portapapeles'];
         let notes = { portapapeles: [] };
         let currentFolder = 'portapapeles';
-
         // Variables for modals
         let isEdit = false;
         let currentEditFolder;
@@ -1186,7 +1056,6 @@
         let currentSummary;
         let searchMode = 'current'; // 'current' or 'all'
         let searchQuery = '';
-
         // Variables para drag-and-drop de notas
         let dragNoteIndex = null;
         let dragPlaceholder = null;
@@ -1194,7 +1063,6 @@
         let currentDragY = 0;
         let autoScrollInterval = null;
         let dragOffsetY = 0; // Nuevo: offset inicial para mantener la posición relativa
-
         // Variables para drag-and-drop de carpetas
         let dragFolderIndex = null;
         let dragFolderPlaceholder = null;
@@ -1202,7 +1070,6 @@
         let currentDragFolderY = 0;
         let autoScrollFolderInterval = null;
         let dragFolderOffsetY = 0; // Nuevo: offset inicial para carpetas
-
         // Variables para swipe entre carpetas
         let swipeStartX = 0;
         let swipeStartY = 0;
@@ -1211,37 +1078,31 @@
         let isSwiping = false;
         let swipeThreshold = 50;
         let verticalScrollThreshold = 10;
-
         // Stack para manejar el historial de navegación
         let navigationStack = ['main'];
-
         // Prevenir zoom y comportamiento no deseado
         document.addEventListener('touchstart', function(e) {
             if (e.touches.length > 1) {
                 e.preventDefault();
             }
         }, { passive: false });
-
         document.addEventListener('gesturestart', function(e) {
             e.preventDefault();
         });
-
         document.addEventListener('gesturechange', function(e) {
             e.preventDefault();
         });
-
         document.addEventListener('gestureend', function(e) {
             e.preventDefault();
         });
-
         // App back action
         function appHandleBack() {
             if (navigationStack.length > 1) {
                 navigationStack.pop();
                 const previousView = navigationStack[navigationStack.length - 1];
-                
+               
                 closeAllModals();
-                
+               
                 switch(previousView) {
                     case 'main':
                         break;
@@ -1275,7 +1136,6 @@
                 }
             }
         }
-
         // System back action
         function handleBackAction() {
             if (navigationStack.length > 1) {
@@ -1286,14 +1146,12 @@
                 }
             }
         }
-
         // Agregar vista al stack
         function pushToNavigationStack(view) {
             if (navigationStack[navigationStack.length - 1] !== view) {
                 navigationStack.push(view);
             }
         }
-
         // Cerrar todos los modals
         function closeAllModals() {
             const modals = document.querySelectorAll('.modal');
@@ -1305,35 +1163,31 @@
             sidebar.classList.remove('open');
             overlay.classList.remove('open');
         }
-
         // Prevenir pull-to-refresh
         document.addEventListener('touchmove', function(e) {
             if (e.touches.length > 1) {
                 e.preventDefault();
                 return;
             }
-            
+           
             const target = e.target;
-            const isScrollable = target.closest('.notes-list') || 
-                                target.closest('.modal-content') || 
+            const isScrollable = target.closest('.notes-list') ||
+                                target.closest('.modal-content') ||
                                 target.closest('.folders') ||
                                 target.closest('.form-textarea') ||
                                 target.closest('.folders-list');
-            
+           
             if (!isScrollable && e.touches[0].clientY < 50) {
                 e.preventDefault();
             }
         }, { passive: false });
-
         // Manejar botón back
         window.addEventListener('popstate', function(e) {
             handleBackAction();
             history.pushState(null, null, window.location.href);
         });
-
         history.replaceState(null, null, window.location.href);
         history.pushState(null, null, window.location.href);
-
         // Load from localStorage
         function loadFromStorage() {
             const data = localStorage.getItem('portapapelesData');
@@ -1344,13 +1198,11 @@
                 currentFolder = parsed.currentFolder || currentFolder;
             }
         }
-
         // Save to localStorage
         function saveToStorage() {
             const data = { folders, notes, currentFolder };
             localStorage.setItem('portapapelesData', JSON.stringify(data));
         }
-
         // Initialize data
         function initializeData() {
             if (!folders.includes('portapapeles')) {
@@ -1360,7 +1212,6 @@
                 notes.portapapeles = [];
             }
         }
-
         // Initialize font size
         function initializeFontSize() {
             const savedSize = localStorage.getItem('noteFontSize') || '16';
@@ -1372,26 +1223,22 @@
                 valueSpan.textContent = savedSize + 'px';
             }
         }
-
         // Update font size
         function updateFontSize(value) {
             document.documentElement.style.setProperty('--base-font-size', value + 'px');
             document.getElementById('font-size-value').textContent = value + 'px';
             localStorage.setItem('noteFontSize', value);
         }
-
         // Toggle hide date
         function toggleHideDate(hide) {
             localStorage.setItem('hideDate', hide);
             renderNotes();
         }
-
         // Toggle hide content
         function toggleHideContent(hide) {
             localStorage.setItem('hideContent', hide);
             renderNotes();
         }
-
         // Initialize toggles
         function initializeToggles() {
             const hideDate = localStorage.getItem('hideDate') === 'true';
@@ -1401,7 +1248,6 @@
             if (dateToggle) dateToggle.checked = hideDate;
             if (contentToggle) contentToggle.checked = hideContent;
         }
-
         // Escape HTML
         function escapeHtml(text) {
             if (text === null || text === undefined) return '';
@@ -1409,12 +1255,10 @@
             div.textContent = text;
             return div.innerHTML;
         }
-
         // Escape JS string
         function escapeJsString(str) {
             return str.replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, '\\n');
         }
-
         // Format date
         function formatDate(date) {
             if (typeof date === 'string') {
@@ -1422,15 +1266,13 @@
             }
             return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
         }
-
         // Render folders
         function renderFolders() {
             const foldersEl = document.getElementById('folders');
-            foldersEl.innerHTML = folders.map(folder => 
+            foldersEl.innerHTML = folders.map(folder =>
                 `<button class="folder-tab ${currentFolder === folder ? 'active' : ''}" onclick="switchFolder('${escapeHtml(folder)}')">${escapeHtml(folder)}</button>`
             ).join('');
         }
-
         // Render folders list in options modal
         function renderFoldersList() {
             const foldersListEl = document.getElementById('folders-list');
@@ -1441,7 +1283,6 @@
                 </div>
             `).join('');
         }
-
         // Switch folder with animation
         function switchFolder(folder, direction = null) {
             const notesList = document.getElementById('notes-list');
@@ -1467,14 +1308,13 @@
             }
             saveToStorage();
         }
-
         // Render notes
         function renderNotes() {
             const notesList = document.getElementById('notes-list');
             const folderNotes = notes[currentFolder] || [];
             const hideDate = localStorage.getItem('hideDate') === 'true';
             const hideContent = localStorage.getItem('hideContent') === 'true';
-            
+           
             notesList.innerHTML = folderNotes.map((note, i) => `
                 <div class="note" data-index="${i}" onclick="handleNoteClick(${i}, event)">
                     <div class="note-content-section">
@@ -1491,14 +1331,12 @@
                 </div>
             `).join('');
         }
-
         // Handle note click
         function handleNoteClick(index, event) {
             if (dragNoteIndex === null && !isSwiping) {
                 viewNote(index);
             }
         }
-
         // Start drag for notes
         function startDrag(index, event) {
             event.preventDefault();
@@ -1511,21 +1349,17 @@
             // Calcular el offset relativo al top del elemento
             dragOffsetY = dragStartY - rect.top;
             noteEl.classList.add('dragging');
-
             // Crear placeholder
             dragPlaceholder = document.createElement('div');
             dragPlaceholder.classList.add('note-placeholder');
             noteEl.parentNode.insertBefore(dragPlaceholder, noteEl.nextSibling);
-
             // Eventos
             document.addEventListener('pointermove', onDragMove);
             document.addEventListener('pointerup', onDragEnd);
             document.addEventListener('pointercancel', onDragEnd);
-
             // Iniciar auto-scroll
             startAutoScroll();
         }
-
         // On drag move for notes
         function onDragMove(event) {
             if (dragNoteIndex === null) return;
@@ -1534,16 +1368,15 @@
             const notesList = document.getElementById('notes-list');
             const dragNoteEl = document.querySelector('.note.dragging');
             const listRect = notesList.getBoundingClientRect();
-            
+           
             // Calcular la posición relativa al contenedor
             const deltaY = currentDragY - dragOffsetY - listRect.top + notesList.scrollTop;
-            
+           
             // Limitar el movimiento dentro del contenedor
             const maxY = notesList.scrollHeight - dragNoteEl.offsetHeight;
             const constrainedY = Math.max(0, Math.min(deltaY, maxY));
-            
+           
             dragNoteEl.style.transform = `translateY(${constrainedY}px)`;
-
             // Encontrar posición para placeholder
             const notes = Array.from(notesList.querySelectorAll('.note:not(.dragging)'));
             let insertIndex = 0;
@@ -1555,11 +1388,9 @@
                 }
                 insertIndex = i + 1;
             }
-
             const targetNote = notes[insertIndex] || null;
             notesList.insertBefore(dragPlaceholder, targetNote);
         }
-
         // Start auto scroll for notes
         function startAutoScroll() {
             stopAutoScroll();
@@ -1570,7 +1401,6 @@
                 const edgeTop = 100;
                 const edgeBottom = 100;
                 let scrollSpeed = 0;
-
                 if (currentDragY < rect.top + edgeTop) {
                     const distance = (rect.top + edgeTop - currentDragY) / edgeTop;
                     scrollSpeed = -Math.min(20, 10 * distance);
@@ -1578,13 +1408,11 @@
                     const distance = (currentDragY - (rect.bottom - edgeBottom)) / edgeBottom;
                     scrollSpeed = Math.min(20, 10 * distance);
                 }
-
                 if (scrollSpeed !== 0) {
                     notesList.scrollTop += scrollSpeed;
                 }
             }, 16);
         }
-
         // Stop auto scroll for notes
         function stopAutoScroll() {
             if (autoScrollInterval) {
@@ -1592,7 +1420,6 @@
                 autoScrollInterval = null;
             }
         }
-
         // On drag end for notes
         function onDragEnd(event) {
             if (dragNoteIndex === null) return;
@@ -1601,27 +1428,22 @@
             const dragNoteEl = document.querySelector('.note.dragging');
             dragNoteEl.classList.remove('dragging');
             dragNoteEl.style.transform = '';
-
             // Encontrar nuevo índice
             const children = Array.from(notesList.children);
             const placeholderIndex = children.indexOf(dragPlaceholder);
-
             // Mover en array
             const [movedNote] = notes[currentFolder].splice(dragNoteIndex, 1);
             notes[currentFolder].splice(placeholderIndex > dragNoteIndex ? placeholderIndex - 1 : placeholderIndex, 0, movedNote);
-
             dragPlaceholder.remove();
             dragPlaceholder = null;
             dragNoteIndex = null;
             dragOffsetY = 0;
             saveToStorage();
             renderNotes();
-
             document.removeEventListener('pointermove', onDragMove);
             document.removeEventListener('pointerup', onDragEnd);
             document.removeEventListener('pointercancel', onDragEnd);
         }
-
         // Start drag for folders
         function startFolderDrag(index, event) {
             event.preventDefault();
@@ -1634,21 +1456,17 @@
             // Calcular el offset relativo al top del elemento
             dragFolderOffsetY = dragFolderStartY - rect.top;
             folderEl.classList.add('dragging');
-
             // Crear placeholder
             dragFolderPlaceholder = document.createElement('div');
             dragFolderPlaceholder.classList.add('folder-placeholder');
             folderEl.parentNode.insertBefore(dragFolderPlaceholder, folderEl.nextSibling);
-
             // Eventos
             document.addEventListener('pointermove', onFolderDragMove);
             document.addEventListener('pointerup', onFolderDragEnd);
             document.addEventListener('pointercancel', onFolderDragEnd);
-
             // Iniciar auto-scroll
             startAutoScrollFolders();
         }
-
         // On drag move for folders
         function onFolderDragMove(event) {
             if (dragFolderIndex === null) return;
@@ -1657,16 +1475,15 @@
             const foldersList = document.getElementById('folders-list');
             const dragFolderEl = document.querySelector('.folder-item.dragging');
             const listRect = foldersList.getBoundingClientRect();
-            
+           
             // Calcular la posición relativa al contenedor
             const deltaY = currentDragFolderY - dragFolderOffsetY - listRect.top + foldersList.scrollTop;
-            
+           
             // Limitar el movimiento dentro del contenedor
             const maxY = foldersList.scrollHeight - dragFolderEl.offsetHeight;
             const constrainedY = Math.max(0, Math.min(deltaY, maxY));
-            
+           
             dragFolderEl.style.transform = `translateY(${constrainedY}px)`;
-
             // Encontrar posición para placeholder
             const folderItems = Array.from(foldersList.querySelectorAll('.folder-item:not(.dragging)'));
             let insertIndex = 0;
@@ -1678,11 +1495,9 @@
                 }
                 insertIndex = i + 1;
             }
-
             const targetFolder = folderItems[insertIndex] || null;
             foldersList.insertBefore(dragFolderPlaceholder, targetFolder);
         }
-
         // Start auto scroll for folders
         function startAutoScrollFolders() {
             stopAutoScrollFolders();
@@ -1693,7 +1508,6 @@
                 const edgeTop = 100;
                 const edgeBottom = 100;
                 let scrollSpeed = 0;
-
                 if (currentDragFolderY < rect.top + edgeTop) {
                     const distance = (rect.top + edgeTop - currentDragFolderY) / edgeTop;
                     scrollSpeed = -Math.min(20, 10 * distance);
@@ -1701,13 +1515,11 @@
                     const distance = (currentDragFolderY - (rect.bottom - edgeBottom)) / edgeBottom;
                     scrollSpeed = Math.min(20, 10 * distance);
                 }
-
                 if (scrollSpeed !== 0) {
                     foldersList.scrollTop += scrollSpeed;
                 }
             }, 16);
         }
-
         // Stop auto scroll for folders
         function stopAutoScrollFolders() {
             if (autoScrollFolderInterval) {
@@ -1715,7 +1527,6 @@
                 autoScrollFolderInterval = null;
             }
         }
-
         // On drag end for folders
         function onFolderDragEnd(event) {
             if (dragFolderIndex === null) return;
@@ -1724,15 +1535,12 @@
             const dragFolderEl = document.querySelector('.folder-item.dragging');
             dragFolderEl.classList.remove('dragging');
             dragFolderEl.style.transform = '';
-
             // Encontrar nuevo índice
             const children = Array.from(foldersList.children);
             const placeholderIndex = children.indexOf(dragFolderPlaceholder);
-
             // Mover en array
             const [movedFolder] = folders.splice(dragFolderIndex, 1);
             folders.splice(placeholderIndex > dragFolderIndex ? placeholderIndex - 1 : placeholderIndex, 0, movedFolder);
-
             dragFolderPlaceholder.remove();
             dragFolderPlaceholder = null;
             dragFolderIndex = null;
@@ -1740,16 +1548,14 @@
             saveToStorage();
             renderFoldersList();
             renderFolders();
-
             document.removeEventListener('pointermove', onFolderDragMove);
             document.removeEventListener('pointerup', onFolderDragEnd);
             document.removeEventListener('pointercancel', onFolderDragEnd);
         }
-
         // Setup swipe for folder change
         function setupSwipe() {
             const notesList = document.getElementById('notes-list');
-            
+           
             notesList.addEventListener('touchstart', (e) => {
                 if (dragNoteIndex !== null) return;
                 swipeStartX = e.touches[0].clientX;
@@ -1757,16 +1563,15 @@
                 isSwiping = false;
                 notesList.style.transition = 'none';
             }, { passive: true });
-
             notesList.addEventListener('touchmove', (e) => {
                 if (dragNoteIndex !== null) return;
-                
+               
                 swipeCurrentX = e.touches[0].clientX;
                 swipeCurrentY = e.touches[0].clientY;
-                
+               
                 const deltaX = swipeCurrentX - swipeStartX;
                 const deltaY = swipeCurrentY - swipeStartY;
-                
+               
                 if (!isSwiping) {
                     if (Math.abs(deltaY) > verticalScrollThreshold && Math.abs(deltaY) > Math.abs(deltaX)) {
                         isSwiping = false;
@@ -1777,20 +1582,19 @@
                         e.preventDefault();
                     }
                 }
-                
+               
                 if (isSwiping) {
                     e.preventDefault();
                     notesList.style.transform = `translateX(${deltaX}px)`;
                 }
             }, { passive: false });
-
             notesList.addEventListener('touchend', (e) => {
                 if (!isSwiping || dragNoteIndex !== null) return;
-                
+               
                 const deltaX = swipeCurrentX - swipeStartX;
                 const currentIndex = folders.indexOf(currentFolder);
                 notesList.style.transition = 'transform 0.3s ease';
-                
+               
                 if (Math.abs(deltaX) > window.innerWidth / 4) {
                     let newFolder;
                     let direction;
@@ -1810,33 +1614,29 @@
                 notesList.style.transform = 'translateX(0)';
                 isSwiping = false;
             }, { passive: true });
-
             notesList.addEventListener('touchcancel', (e) => {
                 notesList.style.transform = 'translateX(0)';
                 isSwiping = false;
             }, { passive: true });
         }
-
         // Render folder dropdown in modal
         function renderFolderDropdown() {
             const select = document.getElementById('note-folder');
-            select.innerHTML = folders.map(folder => 
+            select.innerHTML = folders.map(folder =>
                 `<option value="${escapeHtml(folder)}" ${folder === currentFolder ? 'selected' : ''}>${escapeHtml(folder)}</option>`
             ).join('');
         }
-
         // Render delete folder dropdown
         function renderDeleteFolderDropdown() {
             const select = document.getElementById('delete-folder-select');
             const deletableFolders = folders.filter(f => f !== 'portapapeles');
-            select.innerHTML = deletableFolders.map(folder => 
+            select.innerHTML = deletableFolders.map(folder =>
                 `<option value="${escapeHtml(folder)}">${escapeHtml(folder)}</option>`
             ).join('');
             if (deletableFolders.length === 0) {
                 select.innerHTML = '<option value="">No hay carpetas para eliminar</option>';
             }
         }
-
         // Copy to clipboard
         function copyNoteContent(text) {
             navigator.clipboard.writeText(text).then(() => {
@@ -1845,55 +1645,120 @@
                 alert('Error al copiar');
             });
         }
-
         // Copy from view
         function copyFromView() {
             copyNoteContent(currentContent);
         }
-
         // Get JSON data
         function getJSONData() {
             return {
-                folders, 
+                folders,
                 notes,
                 currentFolder,
                 timestamp: new Date().toISOString(),
                 version: "1.0"
             };
         }
-
-        // Subir a Firebase
-        async function uploadToFirebase(event) {
-            try {
-                const data = getJSONData();
-                await db.ref('/data').set(data);
-                const uploadBtn = event.target;
-                uploadBtn.classList.add('success-flash');
-                setTimeout(() => {
-                    uploadBtn.classList.remove('success-flash');
-                }, 300);
-                alert('Subido a Firebase exitosamente');
-                toggleSidebar();
-            } catch (err) {
-                alert('Error al subir: ' + err.message);
-            }
+        // Función genérica para mostrar confirmación
+        function showConfirm(action, scope, callback) {
+            const text = `¿Está seguro que desea ${action} ${scope}?`;
+            document.getElementById('confirm-text').textContent = text;
+            document.getElementById('confirm-yes-btn').onclick = () => { callback(); closeConfirmModal(); };
+            document.getElementById('confirm-modal').classList.add('open');
+            pushToNavigationStack('confirm-modal');
         }
-
-        // Cargar desde Firebase
+        // Subir a Firebase (todo)
+        async function uploadToFirebase(event) {
+            showConfirm('subir', 'todo', async () => {
+                try {
+                    const data = getJSONData();
+                    await db.ref('/data').set(data);
+                    const uploadBtn = event.target;
+                    uploadBtn.classList.add('success-flash');
+                    setTimeout(() => {
+                        uploadBtn.classList.remove('success-flash');
+                    }, 300);
+                    alert('Subido a Firebase exitosamente');
+                    toggleSidebar();
+                } catch (err) {
+                    alert('Error al subir: ' + err.message);
+                }
+            });
+        }
+        // Cargar desde Firebase (todo)
         async function loadFromFirebase(event) {
-            try {
-                const snapshot = await db.ref('/data').once('value');
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    if (!data.folders || !data.notes) {
-                        throw new Error('Estructura de datos inválida');
+            showConfirm('cargar', 'todo', async () => {
+                try {
+                    const snapshot = await db.ref('/data').once('value');
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        if (!data.folders || !data.notes) {
+                            throw new Error('Estructura de datos inválida');
+                        }
+                        folders = data.folders || folders;
+                        notes = data.notes || notes;
+                        currentFolder = data.currentFolder || currentFolder;
+                        renderFolders();
+                        renderFolderDropdown();
+                        renderDeleteFolderDropdown();
+                        renderNotes();
+                        saveToStorage();
+                        const loadBtn = event.target;
+                        loadBtn.classList.add('success-flash');
+                        setTimeout(() => {
+                            loadBtn.classList.remove('success-flash');
+                        }, 300);
+                        alert('Cargado desde Firebase exitosamente');
+                    } else {
+                        alert('No hay datos en Firebase');
                     }
-                    folders = data.folders || folders;
-                    notes = data.notes || notes;
-                    currentFolder = data.currentFolder || currentFolder;
-                    renderFolders();
-                    renderFolderDropdown();
-                    renderDeleteFolderDropdown();
+                    toggleSidebar();
+                } catch (err) {
+                    alert('Error al cargar: ' + err.message);
+                }
+            });
+        }
+        // Subir esta carpeta
+        async function uploadCurrentFolder(event) {
+            showConfirm('subir', 'esta carpeta', async () => {
+                try {
+                    const snapshot = await db.ref('/data').once('value');
+                    let data = snapshot.exists() ? snapshot.val() : { folders: [], notes: {}, currentFolder: 'portapapeles' };
+                    if (!data.folders) data.folders = [];
+                    if (!data.notes) data.notes = {};
+                    // Actualizar solo la carpeta actual
+                    data.notes[currentFolder] = notes[currentFolder];
+                    if (!data.folders.includes(currentFolder)) {
+                        data.folders.push(currentFolder);
+                    }
+                    await db.ref('/data').set(data);
+                    const uploadBtn = event.target;
+                    uploadBtn.classList.add('success-flash');
+                    setTimeout(() => {
+                        uploadBtn.classList.remove('success-flash');
+                    }, 300);
+                    alert('Carpeta subida exitosamente');
+                    toggleSidebar();
+                } catch (err) {
+                    alert('Error al subir carpeta: ' + err.message);
+                }
+            });
+        }
+        // Cargar esta carpeta
+        async function loadCurrentFolder(event) {
+            showConfirm('cargar', 'esta carpeta', async () => {
+                try {
+                    const snapshot = await db.ref('/data').once('value');
+                    if (!snapshot.exists()) {
+                        alert('No hay datos en Firebase');
+                        return;
+                    }
+                    const data = snapshot.val();
+                    if (!data.notes || !data.notes[currentFolder]) {
+                        alert('No existe esta carpeta en Firebase');
+                        return;
+                    }
+                    notes[currentFolder] = data.notes[currentFolder];
                     renderNotes();
                     saveToStorage();
                     const loadBtn = event.target;
@@ -1901,16 +1766,13 @@
                     setTimeout(() => {
                         loadBtn.classList.remove('success-flash');
                     }, 300);
-                    alert('Cargado desde Firebase exitosamente');
-                } else {
-                    alert('No hay datos en Firebase');
+                    alert('Carpeta cargada exitosamente');
+                    toggleSidebar();
+                } catch (err) {
+                    alert('Error al cargar carpeta: ' + err.message);
                 }
-                toggleSidebar();
-            } catch (err) {
-                alert('Error al cargar: ' + err.message);
-            }
+            });
         }
-
         // Show folders options modal
         function showFoldersOptions() {
             document.getElementById('folders-options-modal').classList.add('open');
@@ -1918,13 +1780,11 @@
             toggleSidebar();
             pushToNavigationStack('folders-options-modal');
         }
-
         // Close folders options modal
         function closeFoldersOptionsModal() {
             document.getElementById('folders-options-modal').classList.remove('open');
             navigationStack.pop();
         }
-
         // Add note
         function addNote() {
             isEdit = false;
@@ -1938,25 +1798,21 @@
             document.getElementById('add-modal').classList.add('open');
             pushToNavigationStack('add-modal');
         }
-
         // Close add note modal
         function closeModal() {
             document.getElementById('add-modal').classList.remove('open');
             navigationStack.pop();
         }
-
         // Save note
         function saveNote() {
             const title = document.getElementById('note-title').value.trim();
             const summary = document.getElementById('note-summary').value.trim();
             const content = document.getElementById('note-content').value.trim();
             let folder = document.getElementById('note-folder').value;
-
             if (!content) {
                 alert('El contenido es obligatorio.');
                 return;
             }
-
             if (isEdit) {
                 folder = currentEditFolder;
                 const newNote = {
@@ -1978,43 +1834,40 @@
                 };
                 notes[folder].unshift(newNote);
             }
-
             isEdit = false;
             renderNotes();
             saveToStorage();
             closeModal();
         }
-
         // Edit note
         function editNote(folder, idx) {
             isEdit = true;
             currentEditFolder = folder;
             currentEditIndex = idx;
             const note = notes[folder][idx];
-            
+           
             document.getElementById('note-title').value = note.title;
             document.getElementById('note-summary').value = note.summary || '';
             document.getElementById('note-content').value = note.content;
             document.getElementById('char-count').textContent = note.content.length;
-            
+           
             document.getElementById('note-folder').value = folder;
             document.getElementById('note-folder').disabled = true;
-            
+           
             document.getElementById('modal-title').textContent = 'Editar nota';
             renderFolderDropdown();
-            
+           
             closeSearchModal();
             closeViewModal();
-            
+           
             document.getElementById('add-modal').classList.add('open');
             pushToNavigationStack('add-modal');
         }
-
         // View note
         function viewNote(index) {
             const note = notes[currentFolder][index];
             document.getElementById('view-note-title').textContent = note.title;
-            
+           
             const summaryEl = document.getElementById('view-note-summary');
             if (note.summary) {
                 summaryEl.textContent = note.summary;
@@ -2022,19 +1875,18 @@
             } else {
                 summaryEl.style.display = 'none';
             }
-            
+           
             document.getElementById('view-note-content').textContent = note.content;
             document.getElementById('view-note-date').textContent = formatDate(note.date);
-            
+           
             currentViewFolder = currentFolder;
             currentViewIndex = index;
             currentContent = note.content;
             currentSummary = note.summary;
-            
+           
             document.getElementById('view-modal').classList.add('open');
             pushToNavigationStack('view-modal');
         }
-
         // View note from search
         function viewSearchNote(folder, index) {
             const originalFolder = currentFolder;
@@ -2042,19 +1894,16 @@
             viewNote(index);
             currentFolder = originalFolder;
         }
-
         // Close view modal
         function closeViewModal() {
             document.getElementById('view-modal').classList.remove('open');
             navigationStack.pop();
         }
-
         // Edit from view
         function editFromView() {
             editNote(currentViewFolder, currentViewIndex);
             closeViewModal();
         }
-
         // Toggle search dropdown
         function toggleSearchDropdown(e) {
             const dropdown = document.getElementById('search-dropdown');
@@ -2064,7 +1913,6 @@
             dropdown.style.display = 'block';
             e.stopPropagation();
         }
-
         // Start search
         function startSearch(mode) {
             searchMode = mode;
@@ -2075,22 +1923,20 @@
             hideDropdown();
             pushToNavigationStack('search-modal');
         }
-
         // Get note index in folder
         function getNoteIndexInFolder(folder, targetNote) {
-            return notes[folder].findIndex(note => 
-                note.title === targetNote.title && 
-                note.content === targetNote.content && 
+            return notes[folder].findIndex(note =>
+                note.title === targetNote.title &&
+                note.content === targetNote.content &&
                 note.date === targetNote.date
             );
         }
-
         // Filter search
         function filterSearch() {
             searchQuery = document.getElementById('search-input').value.toLowerCase();
             const searchList = document.getElementById('search-notes-list');
             let allNotes = [];
-            
+           
             if (searchMode === 'current') {
                 allNotes = (notes[currentFolder] || []).map(note => ({...note, folder: currentFolder}));
             } else {
@@ -2099,12 +1945,12 @@
                     allNotes = allNotes.concat(folderNotes);
                 });
             }
-            
-            const filtered = allNotes.filter(note => 
-                note.title.toLowerCase().includes(searchQuery) || 
+           
+            const filtered = allNotes.filter(note =>
+                note.title.toLowerCase().includes(searchQuery) ||
                 note.content.toLowerCase().includes(searchQuery)
             );
-            
+           
             searchList.innerHTML = filtered.map((note, i) => `
                 <div class="note" onclick="viewSearchNote('${escapeHtml(note.folder)}', ${getNoteIndexInFolder(note.folder, note)})">
                     <div class="note-content-section">
@@ -2120,13 +1966,11 @@
                 </div>
             `).join('');
         }
-
         // Close search modal
         function closeSearchModal() {
             document.getElementById('search-modal').classList.remove('open');
             navigationStack.pop();
         }
-
         // Show note menu
         function showNoteMenu(i, e) {
             currentMenuIndex = i;
@@ -2136,7 +1980,6 @@
             dropdown.style.top = (btnRect.bottom + window.scrollY + 5) + 'px';
             dropdown.style.display = 'block';
         }
-
         // Hide dropdown
         function hideDropdown() {
             const dropdown = document.getElementById('note-dropdown');
@@ -2144,7 +1987,6 @@
             dropdown.style.display = 'none';
             searchDropdown.style.display = 'none';
         }
-
         // Show delete note confirm
         function showDeleteNoteConfirm(idx) {
             document.getElementById('confirm-text').textContent = '¿Estás seguro de que quieres eliminar esta nota?';
@@ -2153,14 +1995,12 @@
             hideDropdown();
             pushToNavigationStack('confirm-modal');
         }
-
         // Delete note
         function deleteNote(idx) {
             notes[currentFolder].splice(idx, 1);
             renderNotes();
             saveToStorage();
         }
-
         // Show delete folder confirm
         function showDeleteFolderConfirm() {
             const folder = document.getElementById('delete-folder-select').value;
@@ -2173,13 +2013,11 @@
             document.getElementById('confirm-modal').classList.add('open');
             pushToNavigationStack('confirm-modal');
         }
-
         // Close confirm modal
         function closeConfirmModal() {
             document.getElementById('confirm-modal').classList.remove('open');
             navigationStack.pop();
         }
-
         // Delete selected folder
         function deleteSelectedFolder() {
             const folder = document.getElementById('delete-folder-select').value;
@@ -2196,14 +2034,13 @@
             saveToStorage();
             closeDeleteFolderModal();
         }
-
         // Load cloud config
         async function loadCloudConfig() {
             try {
                 const cloudBtn = document.querySelector('.cloud-btn');
                 const originalText = cloudBtn.textContent;
                 cloudBtn.innerHTML = '<span class="loading"></span> Cargando...';
-                
+               
                 const response = await fetch('https://raw.githubusercontent.com/papelerio/B/refs/heads/main/notas.json');
                 if (!response.ok) {
                     throw new Error('Error en la respuesta');
@@ -2218,7 +2055,7 @@
                 renderFoldersList();
                 renderNotes();
                 saveToStorage();
-                
+               
                 cloudBtn.textContent = '¡Configuración cargada!';
                 setTimeout(() => {
                     cloudBtn.textContent = originalText;
@@ -2229,20 +2066,17 @@
                 cloudBtn.textContent = originalText;
             }
         }
-
         // Show add folder modal
         function showAddFolderModal() {
             document.getElementById('folder-name').value = '';
             document.getElementById('add-folder-modal').classList.add('open');
             pushToNavigationStack('add-folder-modal');
         }
-
         // Close add folder modal
         function closeAddFolderModal() {
             document.getElementById('add-folder-modal').classList.remove('open');
             navigationStack.pop();
         }
-
         // Save new folder
         function saveNewFolder() {
             const folderName = document.getElementById('folder-name').value.trim();
@@ -2264,7 +2098,6 @@
             closeAddFolderModal();
             closeFoldersOptionsModal();
         }
-
         // Show delete folder modal
         function showDeleteFolderModal() {
             renderDeleteFolderDropdown();
@@ -2272,13 +2105,11 @@
             toggleSidebar();
             pushToNavigationStack('delete-folder-modal');
         }
-
         // Close delete folder modal
         function closeDeleteFolderModal() {
             document.getElementById('delete-folder-modal').classList.remove('open');
             navigationStack.pop();
         }
-
         // Show settings modal
         function showSettingsModal() {
             initializeFontSize();
@@ -2287,13 +2118,11 @@
             toggleSidebar();
             pushToNavigationStack('settings-modal');
         }
-
         // Close settings modal
         function closeSettingsModal() {
             document.getElementById('settings-modal').classList.remove('open');
             navigationStack.pop();
         }
-
         // Toggle sidebar
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -2304,13 +2133,11 @@
                 hideDropdown();
             }
         }
-
         // Update char count
         function updateCharCount() {
             const textarea = document.getElementById('note-content');
             document.getElementById('char-count').textContent = textarea.value.length;
         }
-
         // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
             loadFromStorage();
@@ -2325,12 +2152,10 @@
             document.getElementById('note-content').addEventListener('input', updateCharCount);
             document.addEventListener('click', hideDropdown);
         });
-
         // Prevent dropdown from closing when clicking inside
         document.getElementById('note-dropdown').addEventListener('click', (e) => {
             e.stopPropagation();
         });
-
         document.getElementById('search-dropdown').addEventListener('click', (e) => {
             e.stopPropagation();
         });

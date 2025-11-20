@@ -395,6 +395,21 @@
             cursor: pointer;
             font-size: 12px;
         }
+        /* Color button */
+        .color-btn {
+            background: #8A2BE2;
+            border-radius: 20px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+        }
         /* Add button */
         .add-btn {
             position: fixed;
@@ -794,6 +809,109 @@
         .example-notes .note-menu-section {
             opacity: 0.5;
         }
+        /* Color Modal Styles */
+        .color-modal-content {
+            max-width: 500px;
+            margin: auto;
+            background: #111;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .color-picker-container {
+            margin-bottom: 20px;
+        }
+        .color-picker-label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #fff;
+        }
+        .color-picker {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .favorite-colors-section {
+            margin-bottom: 20px;
+        }
+        .favorite-colors-title {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .favorite-colors-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .favorite-color-item {
+            position: relative;
+            height: 50px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border 0.2s ease;
+        }
+        .favorite-color-item:hover {
+            border: 2px solid #fff;
+        }
+        .favorite-color-item.selected {
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        .remove-favorite-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF3B30;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+        }
+        .favorite-color-item:hover .remove-favorite-btn {
+            display: block;
+        }
+        .color-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+        .color-action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .add-favorite-btn {
+            background: #8A2BE2;
+            color: white;
+        }
+        .apply-color-btn {
+            background: #007AFF;
+            color: white;
+        }
+        .color-preview {
+            width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 1px solid #333;
+        }
     </style>
 </head>
 <body>
@@ -1024,6 +1142,34 @@
             </div>
         </div>
     </div>
+    <!-- Color Modal -->
+    <div class="modal" id="color-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" onclick="closeColorModal()">×</button>
+                <div class="modal-title">Menú de Colores</div>
+            </div>
+            <div class="color-modal-content">
+                <div class="color-preview" id="color-preview">
+                    Vista previa del color
+                </div>
+                <div class="color-picker-container">
+                    <label class="color-picker-label">Selecciona un color:</label>
+                    <input type="color" class="color-picker" id="color-picker" value="#111111">
+                </div>
+                <div class="favorite-colors-section">
+                    <div class="favorite-colors-title">Colores favoritos:</div>
+                    <div class="favorite-colors-grid" id="favorite-colors-grid">
+                        <!-- Favorite colors will be populated by JS -->
+                    </div>
+                </div>
+                <div class="color-actions">
+                    <button class="color-action-btn add-favorite-btn" onclick="addToFavorites()">Añadir a favoritos</button>
+                    <button class="color-action-btn apply-color-btn" onclick="applyColorToNote()">Aplicar color</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -1045,6 +1191,7 @@
         let folders = ['portapapeles'];
         let notes = { portapapeles: [] };
         let currentFolder = 'portapapeles';
+        let favoriteColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
         // Variables for modals
         let isEdit = false;
         let currentEditFolder;
@@ -1056,6 +1203,10 @@
         let currentSummary;
         let searchMode = 'current'; // 'current' or 'all'
         let searchQuery = '';
+        // Variables para color modal
+        let currentColorNoteIndex = null;
+        let selectedColor = '#111111';
+        let selectedFavoriteColor = null;
         // Variables para drag-and-drop de notas
         let dragNoteIndex = null;
         let dragPlaceholder = null;
@@ -1133,6 +1284,9 @@
                         document.getElementById('confirm-modal').classList.remove('open');
                         navigationStack.pop();
                         break;
+                    case 'color-modal':
+                        closeColorModal();
+                        break;
                 }
             }
         }
@@ -1196,11 +1350,12 @@
                 folders = parsed.folders || folders;
                 notes = parsed.notes || notes;
                 currentFolder = parsed.currentFolder || currentFolder;
+                favoriteColors = parsed.favoriteColors || favoriteColors;
             }
         }
         // Save to localStorage
         function saveToStorage() {
-            const data = { folders, notes, currentFolder };
+            const data = { folders, notes, currentFolder, favoriteColors };
             localStorage.setItem('portapapelesData', JSON.stringify(data));
         }
         // Initialize data
@@ -1315,21 +1470,24 @@
             const hideDate = localStorage.getItem('hideDate') === 'true';
             const hideContent = localStorage.getItem('hideContent') === 'true';
            
-            notesList.innerHTML = folderNotes.map((note, i) => `
-                <div class="note" data-index="${i}" onclick="handleNoteClick(${i}, event)">
+            notesList.innerHTML = folderNotes.map((note, i) => {
+                const noteStyle = note.color ? `style="background: ${note.color};"` : '';
+                return `
+                <div class="note" data-index="${i}" onclick="handleNoteClick(${i}, event)" ${noteStyle}>
                     <div class="note-content-section">
                         <div class="note-title">${escapeHtml(note.title)}</div>
                         ${!hideContent ? `<div class="note-content">${escapeHtml(note.content.substring(0, 50) + (note.content.length > 50 ? '...' : ''))}</div>` : ''}
                         ${!hideDate ? `<div class="note-date">${formatDate(note.date)}</div>` : ''}
                     </div>
                     <div class="note-buttons-section">
+                        <button class="color-btn" onclick="showColorModal(${i}); event.stopPropagation();" title="Cambiar color">🎨</button>
                         <button class="reorder-btn" onpointerdown="startDrag(${i}, event)" title="Mover nota">↕</button>
                         <div class="note-menu-section" onclick="showNoteMenu(${i}, event); event.stopPropagation();">
                             <button class="note-menu-btn">⋮</button>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
         // Handle note click
         function handleNoteClick(index, event) {
@@ -1655,6 +1813,7 @@
                 folders,
                 notes,
                 currentFolder,
+                favoriteColors,
                 timestamp: new Date().toISOString(),
                 version: "1.0"
             };
@@ -1698,6 +1857,7 @@
                         folders = data.folders || folders;
                         notes = data.notes || notes;
                         currentFolder = data.currentFolder || currentFolder;
+                        favoriteColors = data.favoriteColors || favoriteColors;
                         renderFolders();
                         renderFolderDropdown();
                         renderDeleteFolderDropdown();
@@ -2049,6 +2209,7 @@
                 folders = data.folders || folders;
                 notes = data.notes || notes;
                 currentFolder = data.currentFolder || currentFolder;
+                favoriteColors = data.favoriteColors || favoriteColors;
                 renderFolders();
                 renderFolderDropdown();
                 renderDeleteFolderDropdown();
@@ -2138,6 +2299,91 @@
             const textarea = document.getElementById('note-content');
             document.getElementById('char-count').textContent = textarea.value.length;
         }
+        // Color Modal Functions
+        function showColorModal(noteIndex) {
+            currentColorNoteIndex = noteIndex;
+            selectedColor = '#111111';
+            selectedFavoriteColor = null;
+           
+            // Reset color picker
+            document.getElementById('color-picker').value = '#111111';
+            document.getElementById('color-preview').style.background = '#111111';
+            document.getElementById('color-preview').style.color = '#fff';
+           
+            // Render favorite colors
+            renderFavoriteColors();
+           
+            // Show modal
+            document.getElementById('color-modal').classList.add('open');
+            pushToNavigationStack('color-modal');
+        }
+        function closeColorModal() {
+            document.getElementById('color-modal').classList.remove('open');
+            navigationStack.pop();
+        }
+        function renderFavoriteColors() {
+            const grid = document.getElementById('favorite-colors-grid');
+            grid.innerHTML = favoriteColors.map((color, index) => `
+                <div class="favorite-color-item ${selectedFavoriteColor === color ? 'selected' : ''}" 
+                     style="background: ${color};" 
+                     onclick="selectFavoriteColor('${color}')">
+                    <button class="remove-favorite-btn" onclick="removeFavoriteColor(${index}); event.stopPropagation();">×</button>
+                </div>
+            `).join('');
+        }
+        function selectFavoriteColor(color) {
+            selectedFavoriteColor = color;
+            selectedColor = color;
+            document.getElementById('color-preview').style.background = color;
+            document.getElementById('color-preview').style.color = getContrastColor(color);
+            renderFavoriteColors();
+        }
+        function removeFavoriteColor(index) {
+            favoriteColors.splice(index, 1);
+            saveToStorage();
+            renderFavoriteColors();
+        }
+        function addToFavorites() {
+            const color = document.getElementById('color-picker').value;
+            if (!favoriteColors.includes(color)) {
+                favoriteColors.push(color);
+                saveToStorage();
+                renderFavoriteColors();
+                alert('Color añadido a favoritos');
+            } else {
+                alert('Este color ya está en favoritos');
+            }
+        }
+        function applyColorToNote() {
+            if (currentColorNoteIndex !== null) {
+                const note = notes[currentFolder][currentColorNoteIndex];
+                note.color = selectedColor;
+                saveToStorage();
+                renderNotes();
+                closeColorModal();
+                alert('Color aplicado a la nota');
+            }
+        }
+        function getContrastColor(hexcolor) {
+            // Convert hex to RGB
+            const r = parseInt(hexcolor.substr(1, 2), 16);
+            const g = parseInt(hexcolor.substr(3, 2), 16);
+            const b = parseInt(hexcolor.substr(5, 2), 16);
+           
+            // Calculate luminance
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+           
+            // Return black or white depending on luminance
+            return luminance > 0.5 ? '#000000' : '#FFFFFF';
+        }
+        // Update color preview when color picker changes
+        document.getElementById('color-picker').addEventListener('input', function(e) {
+            selectedColor = e.target.value;
+            selectedFavoriteColor = null;
+            document.getElementById('color-preview').style.background = selectedColor;
+            document.getElementById('color-preview').style.color = getContrastColor(selectedColor);
+            renderFavoriteColors();
+        });
         // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
             loadFromStorage();

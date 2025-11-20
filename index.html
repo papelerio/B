@@ -325,21 +325,20 @@
             flex: 1;
         }
         .note-title {
-            font-size: var(--base-font-size);
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #fff;
-        }
-        .note-content {
-            font-size: calc(var(--base-font-size) * 0.875);
-            color: #ccc;
-            margin-bottom: 8px;
-            line-height: 1.4;
-        }
-        .note-date {
-            font-size: calc(var(--base-font-size) * 0.75);
-            color: #888;
-        }
+    font-size: var(--base-font-size);
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.note-content {
+    font-size: calc(var(--base-font-size) * 0.875);
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.note-date {
+    font-size: calc(var(--base-font-size) * 0.75);
+}
         .note-buttons-section {
             display: flex;
             gap: 8px;
@@ -1471,7 +1470,7 @@
             const hideContent = localStorage.getItem('hideContent') === 'true';
            
             notesList.innerHTML = folderNotes.map((note, i) => {
-                const noteStyle = note.color ? `style="background: ${note.color};"` : '';
+               const noteStyle = note.color ? `style="background: ${note.color}; color: ${getContrastColor(note.color)};"` : '';
                 return `
                 <div class="note" data-index="${i}" onclick="handleNoteClick(${i}, event)" ${noteStyle}>
                     <div class="note-content-section">

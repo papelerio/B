@@ -935,6 +935,9 @@
         <button class="sidebar-btn" onclick="showFoldersOptions()">📁 Opciones de carpetas</button>
         <button class="sidebar-btn" onclick="showDeleteFolderModal()">🗑️ Eliminar carpeta</button>
         <button class="sidebar-btn" onclick="showSettingsModal()">⚙️ Configuraciones</button>
+<button class="sidebar-btn" onclick="forceUploadToFirebase(event)" style="background: #FF3B30 !important; color: white !important;">
+        💥 Subir a lo bruto
+    </button>
         <button class="cloud-btn" onclick="loadCloudConfig()">☁️ Usar configuración de la nube</button>
     </div>
     <!-- Sidebar overlay -->
@@ -1891,6 +1894,27 @@
             alert('Error al subir: ' + err.message);
         }
     });
+}
+async function forceUploadToFirebase(event) {
+    if (!confirm('⚠️ ¡PELIGRO! Esto SOBREESCRIBIRÁ todo en Firebase.\n¿Estás 100% seguro?')) return;
+    
+    if (!confirm('¿REALMENTE SEGURO?\nSe DESTRUIRÁN todos los datos en Firebase.')) return;
+    
+    try {
+        const data = getJSONData();
+        await db.ref('/').set(data); // Sobreescribe toda la base
+        
+        const uploadBtn = event.target;
+        uploadBtn.classList.add('success-flash');
+        setTimeout(() => {
+            uploadBtn.classList.remove('success-flash');
+        }, 300);
+        
+        alert('💥 ¡DESTRUIDO! Firebase ahora es una copia exacta de tu dispositivo.');
+        toggleSidebar();
+    } catch (err) {
+        alert('Error al destruir: ' + err.message);
+    }
 }
         // Cargar desde Firebase (todo)
        async function loadFromFirebase(event) {

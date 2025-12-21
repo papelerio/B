@@ -938,6 +938,9 @@
 <button class="sidebar-btn" onclick="forceUploadToFirebase(event)" style="background: #FF3B30 !important; color: white !important;">
         💥 Subir a lo bruto
     </button>
+<button class="sidebar-btn" onclick="forceLoadFromFirebase(event)" style="background: #8A2BE2 !important; color: white !important;">
+💣 Cargar a lo bruto
+</button>
         <button class="cloud-btn" onclick="loadCloudConfig()">☁️ Usar configuración de la nube</button>
     </div>
     <!-- Sidebar overlay -->
@@ -1914,6 +1917,47 @@ async function forceUploadToFirebase(event) {
         toggleSidebar();
     } catch (err) {
         alert('Error al destruir: ' + err.message);
+    }
+}
+
+async function forceLoadFromFirebase(event) {
+    if (!confirm('⚠️ ¡PELIGRO! Esto SOBREESCRIBIRÁ todo en tu dispositivo.\n¿Estás 100% seguro?')) return;
+    
+    if (!confirm('¿REALMENTE SEGURO?\nSe PERDERÁN todos los datos locales actuales.')) return;
+    
+    try {
+        const snapshot = await db.ref('/').once('value');
+        if (!snapshot.exists()) {
+            alert('Firebase está vacío, nada que destruir.');
+            return;
+        }
+        
+        const data = snapshot.val();
+        
+        // Destruir todo local y reemplazar
+        folders = data.folders || ['portapapeles'];
+        notes = data.notes || { portapapeles: [] };
+        currentFolder = data.currentFolder || 'portapapeles';
+        favoriteColors = data.favoriteColors || ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+        
+        // Actualizar todo
+        renderFolders();
+        renderFolderDropdown();
+        renderDeleteFolderDropdown();
+        renderFoldersList();
+        renderNotes();
+        saveToStorage();
+        
+        const loadBtn = event.target;
+        loadBtn.classList.add('success-flash');
+        setTimeout(() => {
+            loadBtn.classList.remove('success-flash');
+        }, 300);
+        
+        alert('💣 ¡DESTRUIDO! Tu dispositivo ahora es una copia exacta de Firebase.');
+        toggleSidebar();
+    } catch (err) {
+        alert('Error al cargar a lo bruto: ' + err.message);
     }
 }
         // Cargar desde Firebase (todo)

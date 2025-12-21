@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -2154,11 +2153,11 @@
         }
         const newNote = {
             id: generateId(), // Nuevo ID único
-            title: title || 'Nota sin título',
+            title: title || 'Nota',
             summary: summary,
             content: content,
             date: now,
-            color: null
+            color: '#3c3939'
         };
         notes[folder].unshift(newNote);
     }

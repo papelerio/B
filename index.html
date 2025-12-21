@@ -2475,9 +2475,12 @@ function generateId() {
         }
         // Color Modal Functions
         function showColorModal(noteIndex) {
-            currentColorNoteIndex = noteIndex;
-            selectedColor = '#111111';
-            selectedFavoriteColor = null;
+    currentColorNoteIndex = noteIndex;
+    selectedColor = '#111111';
+    selectedFavoriteColor = null;
+    
+    // Guardar copia de seguridad de colores favoritos actuales
+    window.originalFavoriteColors = [...favoriteColors];
            
             // Reset color picker
             document.getElementById('color-picker').value = '#111111';
@@ -2492,9 +2495,24 @@ function generateId() {
             pushToNavigationStack('color-modal');
         }
         function closeColorModal() {
-            document.getElementById('color-modal').classList.remove('open');
-            navigationStack.pop();
-        }
+    // Restaurar colores favoritos originales
+    favoriteColors = JSON.parse(localStorage.getItem('portapapelesData')).favoriteColors || favoriteColors;
+    
+    document.getElementById('color-modal').classList.remove('open');
+    navigationStack.pop();
+}
+function restoreFavoriteColors() {
+    if (window.favoriteColorsToRestore && window.favoriteColorsToRestore.length > 0) {
+        window.favoriteColorsToRestore.forEach(color => {
+            if (!favoriteColors.includes(color)) {
+                favoriteColors.push(color);
+            }
+        });
+        window.favoriteColorsToRestore = [];
+        saveToStorage();
+        renderFavoriteColors();
+    }
+}
         function renderFavoriteColors() {
             const grid = document.getElementById('favorite-colors-grid');
             grid.innerHTML = favoriteColors.map((color, index) => `
@@ -2513,10 +2531,14 @@ function generateId() {
             renderFavoriteColors();
         }
         function removeFavoriteColor(index) {
-            favoriteColors.splice(index, 1);
-            saveToStorage();
-            renderFavoriteColors();
-        }
+    // Solo marcar para eliminación temporal
+    const colorToRemove = favoriteColors[index];
+    if (!window.favoriteColorsToRestore) window.favoriteColorsToRestore = [];
+    window.favoriteColorsToRestore.push(colorToRemove);
+    
+    favoriteColors.splice(index, 1);
+    renderFavoriteColors();
+}
         function addToFavorites() {
             const color = document.getElementById('color-picker').value;
             if (!favoriteColors.includes(color)) {
@@ -2529,15 +2551,23 @@ function generateId() {
             }
         }
         function applyColorToNote() {
-            if (currentColorNoteIndex !== null) {
-                const note = notes[currentFolder][currentColorNoteIndex];
-                note.color = selectedColor;
-                saveToStorage();
-                renderNotes();
-                closeColorModal();
-                alert('Color aplicado a la nota');
-            }
+    if (currentColorNoteIndex !== null) {
+        const note = notes[currentFolder][currentColorNoteIndex];
+        note.color = selectedColor;
+        
+        // Guardar color como favorito automáticamente
+        if (!favoriteColors.includes(selectedColor)) {
+            favoriteColors.push(selectedColor);
+            saveToStorage();
+            renderFavoriteColors();
         }
+        
+        saveToStorage();
+        renderNotes();
+        closeColorModal();
+        alert('Color aplicado y guardado en favoritos');
+    }
+}
         function getContrastColor(hexcolor) {
             // Convert hex to RGB
             const r = parseInt(hexcolor.substr(1, 2), 16);

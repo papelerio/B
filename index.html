@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1359,13 +1360,24 @@
         }
         // Initialize data
         function initializeData() {
-            if (!folders.includes('portapapeles')) {
-                folders.unshift('portapapeles');
-            }
-            if (!notes.portapapeles) {
-                notes.portapapeles = [];
-            }
+    if (!folders.includes('portapapeles')) {
+        folders.unshift('portapapeles');
+    }
+    if (!notes.portapapeles) {
+        notes.portapapeles = [];
+    }
+    
+    // Asignar IDs a notas antiguas que no tengan
+    folders.forEach(folder => {
+        if (notes[folder]) {
+            notes[folder].forEach((note, index) => {
+                if (!note.id) {
+                    note.id = generateId();
+                }
+            });
         }
+    });
+}
         // Initialize font size
         function initializeFontSize() {
             const savedSize = localStorage.getItem('noteFontSize') || '16';
@@ -1827,111 +1839,259 @@
         }
         // Subir a Firebase (todo)
         async function uploadToFirebase(event) {
-            showConfirm('subir', 'todo', async () => {
-                try {
-                    const data = getJSONData();
-                    await db.ref('/data').set(data);
-                    const uploadBtn = event.target;
-                    uploadBtn.classList.add('success-flash');
-                    setTimeout(() => {
-                        uploadBtn.classList.remove('success-flash');
-                    }, 300);
-                    alert('Subido a Firebase exitosamente');
-                    toggleSidebar();
-                } catch (err) {
-                    alert('Error al subir: ' + err.message);
-                }
+    showConfirm('subir', 'todo', async () => {
+        try {
+            // 1. Obtener solo IDs y fechas de Firebase
+            const snapshot = await db.ref('/data').once('value');
+            const firebaseData = snapshot.exists() ? snapshot.val() : {};
+            
+            // 2. Preparar datos optimizados
+            const optimizedData = {
+                folders: folders,
+                currentFolder: currentFolder,
+                favoriteColors: favoriteColors,
+                notes: {}
+            };
+            
+            // 3. Para cada carpeta, subir solo lo necesario
+            folders.forEach(folder => {
+                if (!notes[folder]) return;
+                
+                const firebaseNotes = firebaseData.notes?.[folder] || [];
+                const firebaseNoteMap = {};
+                
+                // Mapear notas de Firebase por ID
+                firebaseNotes.forEach(note => {
+                    if (note.id) firebaseNoteMap[note.id] = note;
+                });
+                
+                // Filtrar solo notas modificadas o nuevas
+                optimizedData.notes[folder] = notes[folder].filter(note => {
+                    if (!note.id) return true; // Nota sin ID, subir
+                    
+                    const firebaseNote = firebaseNoteMap[note.id];
+                    if (!firebaseNote) return true; // Nota no existe en Firebase
+                    
+                    // Subir solo si fecha es más reciente
+                    return new Date(note.date) > new Date(firebaseNote.date);
+                });
             });
+            
+            // 4. Subir datos optimizados
+            await db.ref('/data').set(optimizedData);
+            
+            // Feedback visual
+            const uploadBtn = event.target;
+            uploadBtn.classList.add('success-flash');
+            setTimeout(() => {
+                uploadBtn.classList.remove('success-flash');
+            }, 300);
+            alert('Subido a Firebase (solo cambios recientes)');
+            toggleSidebar();
+        } catch (err) {
+            alert('Error al subir: ' + err.message);
         }
+    });
+}
         // Cargar desde Firebase (todo)
-        async function loadFromFirebase(event) {
-            showConfirm('cargar', 'todo', async () => {
-                try {
-                    const snapshot = await db.ref('/data').once('value');
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        if (!data.folders || !data.notes) {
-                            throw new Error('Estructura de datos inválida');
+       async function loadFromFirebase(event) {
+    showConfirm('cargar', 'todo', async () => {
+        try {
+            // 1. Obtener solo IDs y fechas de Firebase
+            const snapshot = await db.ref('/data').once('value');
+            if (!snapshot.exists()) {
+                alert('No hay datos en Firebase');
+                return;
+            }
+            
+            const firebaseData = snapshot.val();
+            if (!firebaseData.notes) {
+                alert('Estructura de datos inválida');
+                return;
+            }
+            
+            // 2. Cargar estructura básica primero
+            folders = firebaseData.folders || folders;
+            currentFolder = firebaseData.currentFolder || currentFolder;
+            favoriteColors = firebaseData.favoriteColors || favoriteColors;
+            
+            // 3. Fusionar notas inteligentemente
+            folders.forEach(folder => {
+                const firebaseNotes = firebaseData.notes[folder] || [];
+                const localNotes = notes[folder] || [];
+                
+                // Mapear notas locales por ID
+                const localNoteMap = {};
+                localNotes.forEach(note => {
+                    if (note.id) localNoteMap[note.id] = note;
+                });
+                
+                // Tomar solo notas más recientes de Firebase
+                const mergedNotes = [...localNotes];
+                
+                firebaseNotes.forEach(firebaseNote => {
+                    if (!firebaseNote.id) return;
+                    
+                    const localNote = localNoteMap[firebaseNote.id];
+                    
+                    if (!localNote) {
+                        // Nota nueva de Firebase
+                        mergedNotes.push(firebaseNote);
+                    } else if (new Date(firebaseNote.date) > new Date(localNote.date)) {
+                        // Nota más reciente en Firebase
+                        const index = mergedNotes.findIndex(n => n.id === firebaseNote.id);
+                        if (index !== -1) {
+                            mergedNotes[index] = firebaseNote;
                         }
-                        folders = data.folders || folders;
-                        notes = data.notes || notes;
-                        currentFolder = data.currentFolder || currentFolder;
-                        favoriteColors = data.favoriteColors || favoriteColors;
-                        renderFolders();
-                        renderFolderDropdown();
-                        renderDeleteFolderDropdown();
-                        renderNotes();
-                        saveToStorage();
-                        const loadBtn = event.target;
-                        loadBtn.classList.add('success-flash');
-                        setTimeout(() => {
-                            loadBtn.classList.remove('success-flash');
-                        }, 300);
-                        alert('Cargado desde Firebase exitosamente');
-                    } else {
-                        alert('No hay datos en Firebase');
                     }
-                    toggleSidebar();
-                } catch (err) {
-                    alert('Error al cargar: ' + err.message);
-                }
+                });
+                
+                notes[folder] = mergedNotes;
             });
+            
+            // 4. Actualizar interfaz
+            renderFolders();
+            renderFolderDropdown();
+            renderDeleteFolderDropdown();
+            renderNotes();
+            saveToStorage();
+            
+            // Feedback visual
+            const loadBtn = event.target;
+            loadBtn.classList.add('success-flash');
+            setTimeout(() => {
+                loadBtn.classList.remove('success-flash');
+            }, 300);
+            alert('Cargado desde Firebase (solo datos recientes)');
+            toggleSidebar();
+        } catch (err) {
+            alert('Error al cargar: ' + err.message);
         }
+    });
+}
         // Subir esta carpeta
-        async function uploadCurrentFolder(event) {
-            showConfirm('subir', 'esta carpeta', async () => {
-                try {
-                    const snapshot = await db.ref('/data').once('value');
-                    let data = snapshot.exists() ? snapshot.val() : { folders: [], notes: {}, currentFolder: 'portapapeles' };
-                    if (!data.folders) data.folders = [];
-                    if (!data.notes) data.notes = {};
-                    // Actualizar solo la carpeta actual
-                    data.notes[currentFolder] = notes[currentFolder];
-                    if (!data.folders.includes(currentFolder)) {
-                        data.folders.push(currentFolder);
-                    }
-                    await db.ref('/data').set(data);
-                    const uploadBtn = event.target;
-                    uploadBtn.classList.add('success-flash');
-                    setTimeout(() => {
-                        uploadBtn.classList.remove('success-flash');
-                    }, 300);
-                    alert('Carpeta subida exitosamente');
-                    toggleSidebar();
-                } catch (err) {
-                    alert('Error al subir carpeta: ' + err.message);
+       async function uploadCurrentFolder(event) {
+    showConfirm('subir', 'esta carpeta', async () => {
+        try {
+            // 1. Obtener datos actuales de Firebase
+            const snapshot = await db.ref('/data').once('value');
+            let data = snapshot.exists() ? snapshot.val() : { 
+                folders: [], 
+                notes: {}, 
+                currentFolder: 'portapapeles' 
+            };
+            
+            if (!data.notes) data.notes = {};
+            if (!data.folders) data.folders = [];
+            
+            // 2. Obtener notas actuales de Firebase para esta carpeta
+            const firebaseNotes = data.notes[currentFolder] || [];
+            const firebaseNoteMap = {};
+            firebaseNotes.forEach(note => {
+                if (note.id) firebaseNoteMap[note.id] = note;
+            });
+            
+            // 3. Filtrar solo notas modificadas o nuevas
+            const notesToUpload = notes[currentFolder].filter(note => {
+                if (!note.id) return true;
+                
+                const firebaseNote = firebaseNoteMap[note.id];
+                if (!firebaseNote) return true;
+                
+                return new Date(note.date) > new Date(firebaseNote.date);
+            });
+            
+            // 4. Fusionar con notas existentes en Firebase
+            const mergedNotes = [...firebaseNotes];
+            notesToUpload.forEach(newNote => {
+                const existingIndex = mergedNotes.findIndex(n => n.id === newNote.id);
+                if (existingIndex !== -1) {
+                    mergedNotes[existingIndex] = newNote;
+                } else {
+                    mergedNotes.push(newNote);
                 }
             });
+            
+            // 5. Actualizar solo esta carpeta
+            data.notes[currentFolder] = mergedNotes;
+            if (!data.folders.includes(currentFolder)) {
+                data.folders.push(currentFolder);
+            }
+            
+            await db.ref('/data').set(data);
+            
+            // Feedback
+            const uploadBtn = event.target;
+            uploadBtn.classList.add('success-flash');
+            setTimeout(() => {
+                uploadBtn.classList.remove('success-flash');
+            }, 300);
+            alert('Carpeta subida (solo cambios recientes)');
+            toggleSidebar();
+        } catch (err) {
+            alert('Error al subir carpeta: ' + err.message);
         }
+    });
+}
         // Cargar esta carpeta
         async function loadCurrentFolder(event) {
-            showConfirm('cargar', 'esta carpeta', async () => {
-                try {
-                    const snapshot = await db.ref('/data').once('value');
-                    if (!snapshot.exists()) {
-                        alert('No hay datos en Firebase');
-                        return;
+    showConfirm('cargar', 'esta carpeta', async () => {
+        try {
+            const snapshot = await db.ref('/data').once('value');
+            if (!snapshot.exists()) {
+                alert('No hay datos en Firebase');
+                return;
+            }
+            
+            const data = snapshot.val();
+            if (!data.notes || !data.notes[currentFolder]) {
+                alert('No existe esta carpeta en Firebase');
+                return;
+            }
+            
+            const firebaseNotes = data.notes[currentFolder];
+            const localNotes = notes[currentFolder] || [];
+            
+            // Mapear notas locales por ID
+            const localNoteMap = {};
+            localNotes.forEach(note => {
+                if (note.id) localNoteMap[note.id] = note;
+            });
+            
+            // Fusionar inteligentemente
+            const mergedNotes = [...localNotes];
+            
+            firebaseNotes.forEach(firebaseNote => {
+                if (!firebaseNote.id) return;
+                
+                const localNote = localNoteMap[firebaseNote.id];
+                
+                if (!localNote) {
+                    mergedNotes.push(firebaseNote);
+                } else if (new Date(firebaseNote.date) > new Date(localNote.date)) {
+                    const index = mergedNotes.findIndex(n => n.id === firebaseNote.id);
+                    if (index !== -1) {
+                        mergedNotes[index] = firebaseNote;
                     }
-                    const data = snapshot.val();
-                    if (!data.notes || !data.notes[currentFolder]) {
-                        alert('No existe esta carpeta en Firebase');
-                        return;
-                    }
-                    notes[currentFolder] = data.notes[currentFolder];
-                    renderNotes();
-                    saveToStorage();
-                    const loadBtn = event.target;
-                    loadBtn.classList.add('success-flash');
-                    setTimeout(() => {
-                        loadBtn.classList.remove('success-flash');
-                    }, 300);
-                    alert('Carpeta cargada exitosamente');
-                    toggleSidebar();
-                } catch (err) {
-                    alert('Error al cargar carpeta: ' + err.message);
                 }
             });
+            
+            notes[currentFolder] = mergedNotes;
+            renderNotes();
+            saveToStorage();
+            
+            const loadBtn = event.target;
+            loadBtn.classList.add('success-flash');
+            setTimeout(() => {
+                loadBtn.classList.remove('success-flash');
+            }, 300);
+            alert('Carpeta cargada (solo datos recientes)');
+            toggleSidebar();
+        } catch (err) {
+            alert('Error al cargar carpeta: ' + err.message);
         }
+    });
+}
         // Show folders options modal
         function showFoldersOptions() {
             document.getElementById('folders-options-modal').classList.add('open');
@@ -1964,40 +2124,55 @@
         }
         // Save note
         function saveNote() {
-            const title = document.getElementById('note-title').value.trim();
-            const summary = document.getElementById('note-summary').value.trim();
-            const content = document.getElementById('note-content').value.trim();
-            let folder = document.getElementById('note-folder').value;
-            if (!content) {
-                alert('El contenido es obligatorio.');
-                return;
-            }
-            if (isEdit) {
-                folder = currentEditFolder;
-                const newNote = {
-                    title: title || 'Nota sin título',
-                    summary: summary,
-                    content: content,
-                    date: new Date().toISOString()
-                };
-                notes[folder][currentEditIndex] = newNote;
-            } else {
-                if (!notes[folder]) {
-                    notes[folder] = [];
-                }
-                const newNote = {
-                    title: title || 'Nota sin título',
-                    summary: summary,
-                    content: content,
-                    date: new Date().toISOString()
-                };
-                notes[folder].unshift(newNote);
-            }
-            isEdit = false;
-            renderNotes();
-            saveToStorage();
-            closeModal();
+    const title = document.getElementById('note-title').value.trim();
+    const summary = document.getElementById('note-summary').value.trim();
+    const content = document.getElementById('note-content').value.trim();
+    let folder = document.getElementById('note-folder').value;
+    
+    if (!content) {
+        alert('El contenido es obligatorio.');
+        return;
+    }
+    
+    const now = new Date().toISOString();
+    
+    if (isEdit) {
+        folder = currentEditFolder;
+        const originalNote = notes[folder][currentEditIndex];
+        const newNote = {
+            id: originalNote.id || generateId(), // Mantener ID existente
+            title: title || 'Nota sin título',
+            summary: summary,
+            content: content,
+            date: now, // Nueva fecha de modificación
+            color: originalNote.color // Mantener color
+        };
+        notes[folder][currentEditIndex] = newNote;
+    } else {
+        if (!notes[folder]) {
+            notes[folder] = [];
         }
+        const newNote = {
+            id: generateId(), // Nuevo ID único
+            title: title || 'Nota sin título',
+            summary: summary,
+            content: content,
+            date: now,
+            color: null
+        };
+        notes[folder].unshift(newNote);
+    }
+    
+    isEdit = false;
+    renderNotes();
+    saveToStorage();
+    closeModal();
+}
+
+// Agrega esta función nueva:
+function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
         // Edit note
         function editNote(folder, idx) {
             isEdit = true;

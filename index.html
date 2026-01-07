@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1390,6 +1389,7 @@ let folderOrders = {};  // Esto SÍ lo necesitamos para orden
             }
         }
 // Subir full lite (solo cambios)
+// Subir full lite - VERSIÓN CORREGIDA
 async function uploadFullLite(event) {
     try {
         const snapshot = await db.ref('/data').once('value');
@@ -1406,7 +1406,7 @@ async function uploadFullLite(event) {
             notes: {}
         };
         
-        // Solo subir notas modificadas o nuevas
+        // Solo subir notas modificadas o nuevas - LIMPIANDO CAMPOS BASURA
         folders.forEach(folder => {
             if (!notes[folder]) return;
             
@@ -1416,22 +1416,49 @@ async function uploadFullLite(event) {
                 if (note.id) firebaseNoteMap[note.id] = note;
             });
             
-            dataToUpload.notes[folder] = notes[folder].filter(note => {
-                if (!note.id) return true;
-                const firebaseNote = firebaseNoteMap[note.id];
-                if (!firebaseNote) return true;
-                return new Date(note.date) > new Date(firebaseNote.date);
-            });
+            dataToUpload.notes[folder] = notes[folder]
+                .filter(note => {
+                    if (!note.id) return true;
+                    const firebaseNote = firebaseNoteMap[note.id];
+                    if (!firebaseNote) return true;
+                    return new Date(note.date) > new Date(firebaseNote.date);
+                })
+                .map(note => {
+                    // Crear copia LIMPIA
+                    const notaLimpia = {
+                        id: note.id,
+                        title: note.title || 'Nota',
+                        summary: note.summary || '',
+                        content: note.content || '',
+                        date: note.date,
+                        color: note.color || '#3c3939'
+                    };
+                    
+                    delete notaLimpia.deleted;
+                    delete notaLimpia.position;
+                    
+                    return notaLimpia;
+                });
+        });
+        
+        // LIMPIAR TAMBIÉN LAS NOTAS EXISTENTES QUE NO SE MODIFICARON
+        folders.forEach(folder => {
+            if (firebaseData.notes?.[folder] && !dataToUpload.notes[folder]) {
+                dataToUpload.notes[folder] = firebaseData.notes[folder].map(note => {
+                    const { deleted, position, ...notaLimpia } = note;
+                    return notaLimpia;
+                });
+            }
         });
         
         await db.ref('/data').set(dataToUpload);
-        alert('✅ Subido full lite (solo cambios)');
+        alert('✅ Subido full lite (solo cambios y LIMPIO)');
     } catch (err) {
         alert('Error: ' + err.message);
     }
 }
-
 // Subir carpeta lite
+// Subir carpeta lite - VERSIÓN CORREGIDA
 async function uploadFolderLite(event) {
     try {
         const snapshot = await db.ref('/data').once('value');
@@ -1446,13 +1473,31 @@ async function uploadFolderLite(event) {
             if (note.id) firebaseNoteMap[note.id] = note;
         });
         
-        // Solo notas modificadas o nuevas
-        const notesToUpload = notes[currentFolder].filter(note => {
-            if (!note.id) return true;
-            const firebaseNote = firebaseNoteMap[note.id];
-            if (!firebaseNote) return true;
-            return new Date(note.date) > new Date(firebaseNote.date);
-        });
+        // Solo notas modificadas o nuevas - LIMPIANDO CAMPOS BASURA
+        const notesToUpload = notes[currentFolder]
+            .filter(note => {
+                if (!note.id) return true;
+                const firebaseNote = firebaseNoteMap[note.id];
+                if (!firebaseNote) return true;
+                return new Date(note.date) > new Date(firebaseNote.date);
+            })
+            .map(note => {
+                // Crear copia LIMPIA sin campos basura
+                const notaLimpia = {
+                    id: note.id,
+                    title: note.title || 'Nota',
+                    summary: note.summary || '',
+                    content: note.content || '',
+                    date: note.date,
+                    color: note.color || '#3c3939'
+                };
+                
+                // Eliminar campos innecesarios si existen
+                delete notaLimpia.deleted;
+                delete notaLimpia.position;
+                
+                return notaLimpia;
+            });
         
         const data = firebaseData;
         if (!data.notes) data.notes = {};
@@ -1467,13 +1512,20 @@ async function uploadFolderLite(event) {
             }
         });
         
+        // LIMPIAR TAMBIÉN LAS NOTAS EXISTENTES EN FIREBASE
+        if (data.notes[currentFolder]) {
+            data.notes[currentFolder] = data.notes[currentFolder].map(note => {
+                const { deleted, position, ...notaLimpia } = note;
+                return notaLimpia;
+            });
+        }
+        
         await db.ref('/data').set(data);
-        alert('✅ Carpeta subida lite (solo cambios)');
+        alert('✅ Carpeta subida lite (solo cambios y LIMPIA)');
     } catch (err) {
         alert('Error: ' + err.message);
     }
 }
-
 // Cargar carpeta a lo bruto
 async function loadFolderBruteForce(event) {
     if (!confirm('⚠️ Esto SOBREESCRIBIRÁ la carpeta actual.\n¿Seguro?')) return;
@@ -2028,7 +2080,7 @@ async function forceUploadToFirebase(event) {
     if (!confirm('¿REALMENTE SEGURO?\nSe DESTRUIRÁN todos los datos en Firebase.')) return;
     
     try {
-        // Calcular orden actual antes de subir
+        // Calcular orden actual
         const currentFolderOrders = {};
         folders.forEach(folder => {
             if (notes[folder]) {
@@ -2036,15 +2088,38 @@ async function forceUploadToFirebase(event) {
             }
         });
         
+        // PREPARAR DATOS LIMPIOS
+        const notesLimpios = {};
+        folders.forEach(folder => {
+            if (notes[folder]) {
+                notesLimpios[folder] = notes[folder].map(note => {
+                    // Copia limpia sin campos basura
+                    const notaLimpia = {
+                        id: note.id,
+                        title: note.title || 'Nota',
+                        summary: note.summary || '',
+                        content: note.content || '',
+                        date: note.date,
+                        color: note.color || '#3c3939'
+                    };
+                    
+                    // Eliminar cualquier campo basura
+                    delete notaLimpia.deleted;
+                    delete notaLimpia.position;
+                    
+                    return notaLimpia;
+                });
+            }
+        });
+        
         const data = {
             folders,
-            notes,
+            notes: notesLimpios, // ← USAR LA VERSIÓN LIMPIA
             currentFolder,
             favoriteColors,
-            deletedNoteIds,
-            folderOrders: folderOrders, // ← usa la variable global ya actualizada
+            folderOrders: currentFolderOrders,
             timestamp: new Date().toISOString(),
-            version: "1.1"
+            version: "2.0"
         };
         
         await db.ref('/').set(data); // Sobreescribe toda la base
@@ -2055,10 +2130,10 @@ async function forceUploadToFirebase(event) {
             uploadBtn.classList.remove('success-flash');
         }, 300);
         
-        alert('💥 ¡DESTRUIDO! Firebase ahora es una copia exacta de tu dispositivo (incluyendo orden).');
+        alert('💥 ¡Subido a lo bruto! (Datos LIMPIOS)');
         toggleSidebar();
     } catch (err) {
-        alert('Error al destruir: ' + err.message);
+        alert('Error al subir: ' + err.message);
     }
 }
 

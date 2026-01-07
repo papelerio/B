@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -928,13 +929,20 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
     <button class="close-btn" onclick="toggleSidebar()">X</button>
-    <button class="sidebar-btn" onclick="syncEverything(event)">🔄 Sincronizar todo</button>
-    <button class="sidebar-btn" onclick="syncCurrentFolder(event)">🔄 Sincronizar solo esta carpeta</button>
+    <button class="sidebar-btn" onclick="uploadFullLite(event)" style="background: #4CAF50 !important; color: white !important;">
+        📤 Subir full lite
+    </button>
+    <button class="sidebar-btn" onclick="uploadFolderLite(event)" style="background: #4CAF50 !important; color: white !important;">
+        📤 Subir carpeta lite
+    </button>
     <button class="sidebar-btn" onclick="forceUploadToFirebase(event)" style="background: #FF3B30 !important; color: white !important;">
         💥 Subir a lo bruto
     </button>
     <button class="sidebar-btn" onclick="forceLoadFromFirebase(event)" style="background: #8A2BE2 !important; color: white !important;">
         💣 Cargar a lo bruto
+    </button>
+    <button class="sidebar-btn" onclick="loadFolderBruteForce(event)" style="background: #8A2BE2 !important; color: white !important;">
+        💣 Cargar carpeta a lo bruto
     </button>
     <button class="sidebar-btn" onclick="showFoldersOptions()">📁 Opciones de carpetas</button>
     <button class="sidebar-btn" onclick="showDeleteFolderModal()">🗑️ Eliminar carpeta</button>
@@ -1190,12 +1198,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         // Data structures
-        let folders = ['portapapeles'];
-        let notes = { portapapeles: [] };
-        let currentFolder = 'portapapeles';
-        let favoriteColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
-let deletedNoteIds = [];  // Nuevo: IDs de notas eliminadas
-let folderOrders = {};  // Nuevo: {carpeta: [id1, id2, id3, ...]}
+let folders = ['portapapeles'];
+let notes = { portapapeles: [] };
+let currentFolder = 'portapapeles';
+let favoriteColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+let folderOrders = {};  // Esto SÍ lo necesitamos para orden
         // Variables for modals
         let isEdit = false;
         let currentEditFolder;
@@ -1355,97 +1362,143 @@ let folderOrders = {};  // Nuevo: {carpeta: [id1, id2, id3, ...]}
         notes = parsed.notes || notes;
         currentFolder = parsed.currentFolder || currentFolder;
         favoriteColors = parsed.favoriteColors || favoriteColors;
-        deletedNoteIds = parsed.deletedNoteIds || [];
         folderOrders = parsed.folderOrders || {};
         
-        // Aplicar orden guardado si existe
-        if (Object.keys(folderOrders).length > 0) {
-            Object.keys(folderOrders).forEach(folder => {
-                if (notes[folder] && folderOrders[folder]) {
-                    const orderedNotes = [];
-                    const noteMap = {};
-                    
-                    // Mapear notas por ID
-                    notes[folder].forEach(note => {
-                        if (note.id) noteMap[note.id] = note;
-                    });
-                    
-                    // Ordenar según folderOrders
-                    folderOrders[folder].forEach(id => {
-                        if (noteMap[id] && !noteMap[id].deleted) {
-                            orderedNotes.push(noteMap[id]);
-                        }
-                    });
-                    
-                    // Añadir notas nuevas que no estaban en el orden
-                    notes[folder].forEach(note => {
-                        if (!folderOrders[folder].includes(note.id) && !note.deleted) {
-                            orderedNotes.push(note);
-                        }
-                    });
-                    
-                    // Actualizar posición
-                    orderedNotes.forEach((note, index) => {
-                        note.position = index;
-                    });
-                    
-                    notes[folder] = orderedNotes;
-                }
-            });
-        }
+        // Limpiar basura de notas viejas
+        folders.forEach(folder => {
+            if (notes[folder]) {
+                notes[folder].forEach(note => {
+                    delete note.deleted;
+                    delete note.position;
+                });
+            }
+        });
     }
 }
         // Save to localStorage
         function saveToStorage() {
-    // Guardar orden actual de cada carpeta
-    folderOrders = {};
-    folders.forEach(folder => {
-        if (notes[folder]) {
-            folderOrders[folder] = notes[folder].map(note => note.id);
-        }
-    });
-    
-    const data = { folders, notes, currentFolder, favoriteColors, deletedNoteIds, folderOrders };
+    const data = { folders, notes, currentFolder, favoriteColors, folderOrders };
     localStorage.setItem('portapapelesData', JSON.stringify(data));
 }
-        // Initialize data
+                // Initialize data
         function initializeData() {
-    if (!folders.includes('portapapeles')) {
-        folders.unshift('portapapeles');
-    }
-    if (!notes.portapapeles) {
-        notes.portapapeles = [];
-    }
-    
-    // Asignar IDs y posiciones a notas antiguas
-    folders.forEach(folder => {
-        if (notes[folder]) {
-            notes[folder].forEach((note, index) => {
-                if (!note.id) {
-                    note.id = generateId();
-                }
-                if (note.position === undefined) {
-                    note.position = index;
-                }
-                if (note.deleted === undefined) {
-                    note.deleted = false;
-                }
+            if (!folders.includes('portapapeles')) {
+                folders.unshift('portapapeles');
+            }
+            if (!notes.portapapeles) {
+                notes.portapapeles = [];
+            }
+        }
+// Subir full lite (solo cambios)
+async function uploadFullLite(event) {
+    try {
+        const snapshot = await db.ref('/data').once('value');
+        const firebaseData = snapshot.exists() ? snapshot.val() : { 
+            folders: [], 
+            notes: {}, 
+            favoriteColors: [] 
+        };
+        
+        const dataToUpload = {
+            folders: folders,
+            currentFolder: currentFolder,
+            favoriteColors: favoriteColors,
+            notes: {}
+        };
+        
+        // Solo subir notas modificadas o nuevas
+        folders.forEach(folder => {
+            if (!notes[folder]) return;
+            
+            const firebaseNotes = firebaseData.notes?.[folder] || [];
+            const firebaseNoteMap = {};
+            firebaseNotes.forEach(note => {
+                if (note.id) firebaseNoteMap[note.id] = note;
             });
             
-            // Asegurar que las posiciones sean secuenciales
-            notes[folder].sort((a, b) => a.position - b.position);
-            notes[folder].forEach((note, index) => {
-                note.position = index;
+            dataToUpload.notes[folder] = notes[folder].filter(note => {
+                if (!note.id) return true;
+                const firebaseNote = firebaseNoteMap[note.id];
+                if (!firebaseNote) return true;
+                return new Date(note.date) > new Date(firebaseNote.date);
             });
-        }
-    });
+        });
+        
+        await db.ref('/data').set(dataToUpload);
+        alert('✅ Subido full lite (solo cambios)');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Subir carpeta lite
+async function uploadFolderLite(event) {
+    try {
+        const snapshot = await db.ref('/data').once('value');
+        const firebaseData = snapshot.exists() ? snapshot.val() : { 
+            folders: [], 
+            notes: {} 
+        };
+        
+        const firebaseNotes = firebaseData.notes?.[currentFolder] || [];
+        const firebaseNoteMap = {};
+        firebaseNotes.forEach(note => {
+            if (note.id) firebaseNoteMap[note.id] = note;
+        });
+        
+        // Solo notas modificadas o nuevas
+        const notesToUpload = notes[currentFolder].filter(note => {
+            if (!note.id) return true;
+            const firebaseNote = firebaseNoteMap[note.id];
+            if (!firebaseNote) return true;
+            return new Date(note.date) > new Date(firebaseNote.date);
+        });
+        
+        const data = firebaseData;
+        if (!data.notes) data.notes = {};
+        if (!data.notes[currentFolder]) data.notes[currentFolder] = [];
+        
+        notesToUpload.forEach(newNote => {
+            const existingIndex = data.notes[currentFolder].findIndex(n => n.id === newNote.id);
+            if (existingIndex !== -1) {
+                data.notes[currentFolder][existingIndex] = newNote;
+            } else {
+                data.notes[currentFolder].push(newNote);
+            }
+        });
+        
+        await db.ref('/data').set(data);
+        alert('✅ Carpeta subida lite (solo cambios)');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+}
+
+// Cargar carpeta a lo bruto
+async function loadFolderBruteForce(event) {
+    if (!confirm('⚠️ Esto SOBREESCRIBIRÁ la carpeta actual.\n¿Seguro?')) return;
     
-    // Limpiar órdenes de carpetas eliminadas
-    Object.keys(folderOrders).forEach(folder => {
-        if (!folders.includes(folder)) {
-            delete folderOrders[folder];
+    try {
+        const snapshot = await db.ref('/data').once('value');
+        if (!snapshot.exists()) {
+            alert('No hay datos en Firebase');
+            return;
         }
-    });
+        
+        const firebaseData = snapshot.val();
+        if (!firebaseData.notes || !firebaseData.notes[currentFolder]) {
+            alert('No existe esta carpeta en Firebase');
+            return;
+        }
+        
+        // Sobrescribir carpeta actual
+        notes[currentFolder] = firebaseData.notes[currentFolder];
+        renderNotes();
+        saveToStorage();
+        alert('✅ Carpeta cargada a lo bruto');
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
 }
         // Initialize font size
         function initializeFontSize() {
@@ -1678,10 +1731,6 @@ const [movedNote] = notes[currentFolder].splice(dragNoteIndex, 1);
 const newIndex = placeholderIndex > dragNoteIndex ? placeholderIndex - 1 : placeholderIndex;
 notes[currentFolder].splice(newIndex, 0, movedNote);
 
-// Actualizar posiciones de TODAS las notas en esta carpeta
-notes[currentFolder].forEach((note, index) => {
-    note.position = index;
-});
             dragPlaceholder.remove();
             dragPlaceholder = null;
             dragNoteIndex = null;
@@ -1899,23 +1948,14 @@ notes[currentFolder].forEach((note, index) => {
         }
         // Get JSON data
         function getJSONData() {
-    // Calcular orden actual
-    const currentFolderOrders = {};
-    folders.forEach(folder => {
-        if (notes[folder]) {
-            currentFolderOrders[folder] = notes[folder].map(note => note.id);
-        }
-    });
-    
     return {
         folders,
         notes,
         currentFolder,
         favoriteColors,
-        deletedNoteIds,
-        folderOrders: currentFolderOrders,
+        folderOrders,
         timestamp: new Date().toISOString(),
-        version: "1.1"
+        version: "2.0"
     };
 }
         // Función genérica para mostrar confirmación
@@ -2002,7 +2042,7 @@ async function forceUploadToFirebase(event) {
             currentFolder,
             favoriteColors,
             deletedNoteIds,
-            folderOrders: currentFolderOrders,  // Incluir orden
+            folderOrders: folderOrders, // ← usa la variable global ya actualizada
             timestamp: new Date().toISOString(),
             version: "1.1"
         };
@@ -2038,7 +2078,7 @@ async function syncEverything(event) {
             const firebaseData = snapshot.exists() ? snapshot.val() : {
                 folders: [],
                 notes: {},
-                deletedNoteIds: []  // Nuevo campo para IDs eliminados
+                deletedNoteIds: []
             };
             
             // 2. Sincronizar carpetas
@@ -2061,28 +2101,30 @@ async function syncEverything(event) {
             const locallyDeletedIds = [...deletedNoteIds];
             firebaseData.deletedNoteIds = [...new Set([...firebaseDeletedIds, ...locallyDeletedIds])];
             
-            // 5. Limpiar IDs de eliminaciones locales (ya fueron sincronizadas)
+            // 5. Limpiar IDs de eliminaciones locales
             deletedNoteIds = [];
             
-                        // 6. Preparar orden de sincronización LIMPIO (sin IDs eliminados)
+            // 6. Preparar orden ACTUAL
             const syncOrder = {};
             allFolders.forEach(folder => {
                 if (notes[folder]) {
-                    // Solo IDs de notas NO eliminadas
                     syncOrder[folder] = notes[folder]
                         .filter(note => !note.deleted)
                         .map(note => note.id);
                 }
             });
             
-            // Limpiar órdenes antiguas de carpetas eliminadas
-            Object.keys(firebaseData.folderOrders || {}).forEach(folder => {
-                if (!allFolders.includes(folder)) {
-                    delete firebaseData.folderOrders[folder];
+            // ⭐⭐ NUEVO: ACTUALIZAR folderOrders EN FIREBASE ⭐⭐
+            if (!firebaseData.folderOrders) firebaseData.folderOrders = {};
+            folders.forEach(folder => {
+                if (notes[folder]) {
+                    firebaseData.folderOrders[folder] = notes[folder]
+                        .filter(note => !note.deleted)
+                        .map(note => note.id);
                 }
             });
             
-            // 7. Sincronizar notas (carpeta por carpeta) CON ORDEN
+            // 7. Sincronizar notas
             allFolders.forEach(folder => {
                 const localNotes = notes[folder] || [];
                 const firebaseNotes = firebaseData.notes?.[folder] || [];
@@ -2152,21 +2194,20 @@ async function syncEverything(event) {
                 if (!firebaseData.notes) firebaseData.notes = {};
                 firebaseData.notes[folder] = orderedNotes;
                 
-                // Guardar orden en Firebase
-                if (!firebaseData.folderOrders) firebaseData.folderOrders = {};
-                firebaseData.folderOrders[folder] = orderedNotes.map(note => note.id);
+                // ⭐ folderOrders YA ESTÁ ACTUALIZADO ARRIBA ⭐
             });
-            // 7. Guardar en Firebase
+            
+            // 8. Guardar en Firebase
             await db.ref('/data').set(firebaseData);
             
-            // 8. Actualizar localmente
+            // 9. Actualizar localmente
             saveToStorage();
             renderFolders();
             renderFolderDropdown();
             renderDeleteFolderDropdown();
             renderNotes();
             
-            // 9. Feedback
+            // 10. Feedback
             if (syncBtn) {
                 syncBtn.textContent = '✅ Sincronizado!';
                 setTimeout(() => {
@@ -2176,7 +2217,7 @@ async function syncEverything(event) {
             }
             
             toggleSidebar();
-            alert('Sincronización completa ✓\nNotas eliminadas se propagarán a otros dispositivos.');
+            alert('Sincronización completa ✓');
             
         } catch (err) {
             alert('Error en sincronización: ' + err.message);
@@ -2207,13 +2248,14 @@ async function syncCurrentFolder(event) {
             const firebaseData = snapshot.exists() ? snapshot.val() : {
                 folders: [],
                 notes: {},
-                deletedNoteIds: []
+                deletedNoteIds: [],
+                folderOrders: {} // ← AÑADIR
             };
             
             // 2. Obtener notas de esta carpeta en Firebase
             const firebaseNotes = firebaseData.notes?.[currentFolder] || [];
             
-            // 3. Aplicar eliminaciones a esta carpeta
+            // 3. Aplicar eliminaciones
             const firebaseDeletedIds = firebaseData.deletedNoteIds || [];
             firebaseDeletedIds.forEach(id => {
                 const noteIndex = notes[currentFolder].findIndex(n => n.id === id);
@@ -2222,9 +2264,8 @@ async function syncCurrentFolder(event) {
                 }
             });
             
-            // 4. Añadir nuestras eliminaciones a Firebase
+            // 4. Añadir nuestras eliminaciones
             const locallyDeletedIds = deletedNoteIds.filter(id => {
-                // Solo IDs de notas que estaban en esta carpeta
                 const noteExists = notes[currentFolder].some(n => n.id === id);
                 return noteExists;
             });
@@ -2235,58 +2276,73 @@ async function syncCurrentFolder(event) {
             const activeLocalNotes = notes[currentFolder].filter(n => !n.deleted);
             const activeFirebaseNotes = firebaseNotes.filter(n => !n.deleted);
             
-            // 6. Combinar notas (misma lógica que syncEverything)
-            const localMap = {};
-            activeLocalNotes.forEach(note => {
-                if (note.id) localMap[note.id] = note;
-            });
+                        // 6. Obtener ORDEN ACTUAL LOCAL (REAL)
+            const realLocalOrder = notes[currentFolder]
+                .filter(note => !note.deleted)
+                .sort((a, b) => a.position - b.position)
+                .map(note => note.id);
             
-            const firebaseMap = {};
-            activeFirebaseNotes.forEach(note => {
-                if (note.id) firebaseMap[note.id] = note;
-            });
-            
+            // 7. USAR ORDEN LOCAL COMO BASE (no el de Firebase)
+            const localOrder = realLocalOrder;
             const combinedNotes = [];
-            const allIds = [...new Set([...Object.keys(localMap), ...Object.keys(firebaseMap)])];
+            const allIds = new Set();
             
-            allIds.forEach(id => {
-                const localNote = localMap[id];
-                const firebaseNote = firebaseMap[id];
+            // Primero: Notas en orden local
+            localOrder.forEach(id => {
+                const localNote = activeLocalNotes.find(n => n.id === id);
+                const firebaseNote = activeFirebaseNotes.find(n => n.id === id);
                 
-                if (!localNote) {
-                    combinedNotes.push(firebaseNote);
-                } else if (!firebaseNote) {
-                    combinedNotes.push(localNote);
-                } else {
-                    const localDate = new Date(localNote.date);
-                    const firebaseDate = new Date(firebaseNote.date);
-                    
-                    if (firebaseDate > localDate) {
+                if (localNote || firebaseNote) {
+                    // Tomar la más reciente
+                    if (!localNote) {
                         combinedNotes.push(firebaseNote);
-                    } else {
+                    } else if (!firebaseNote) {
                         combinedNotes.push(localNote);
+                    } else {
+                        const localDate = new Date(localNote.date);
+                        const firebaseDate = new Date(firebaseNote.date);
+                        combinedNotes.push(firebaseDate > localDate ? firebaseNote : localNote);
                     }
+                    allIds.add(id);
                 }
             });
             
-            // 7. Actualizar
+            // Luego: Notas nuevas que no estaban en el orden
+            [...activeLocalNotes, ...activeFirebaseNotes].forEach(note => {
+                if (!allIds.has(note.id)) {
+                    combinedNotes.push(note);
+                }
+            });
+            
+            // 8. Actualizar POSICIONES
+            combinedNotes.forEach((note, index) => {
+                note.position = index;
+            });
+            
+            // 9. ACTUALIZAR TODO
             notes[currentFolder] = combinedNotes;
+            folderOrders[currentFolder] = combinedNotes.map(note => note.id); // ← IMPORTANTE
+            
             if (!firebaseData.notes) firebaseData.notes = {};
             firebaseData.notes[currentFolder] = combinedNotes;
             
-            // 8. Asegurar que la carpeta esté en la lista
+            // ACTUALIZAR folderOrders EN FIREBASE
+            if (!firebaseData.folderOrders) firebaseData.folderOrders = {};
+            firebaseData.folderOrders[currentFolder] = combinedNotes.map(note => note.id); // ← AQUÍ TAMBIÉN
+            
+            // 10. Asegurar que la carpeta esté en la lista
             if (!firebaseData.folders.includes(currentFolder)) {
                 firebaseData.folders.push(currentFolder);
             }
             
-            // 9. Guardar en Firebase
+            // 11. Guardar en Firebase
             await db.ref('/data').set(firebaseData);
             
-            // 10. Actualizar localmente
+            // 12. Actualizar localmente
             saveToStorage();
             renderNotes();
             
-            // 11. Feedback
+            // 13. Feedback
             if (syncBtn) {
                 syncBtn.textContent = '✅ Sincronizado!';
                 setTimeout(() => {
@@ -2296,7 +2352,7 @@ async function syncCurrentFolder(event) {
             }
             
             toggleSidebar();
-            alert('Carpeta sincronizada ✓');
+            alert('Carpeta sincronizada ✓ (Incluye orden)');
             
         } catch (err) {
             alert('Error: ' + err.message);
@@ -2562,6 +2618,9 @@ async function forceLoadFromFirebase(event) {
             
             // 5. Actualizar solo esta carpeta
             data.notes[currentFolder] = mergedNotes;
+// Asegurar que folderOrders se actualice
+if (!data.folderOrders) data.folderOrders = {};
+data.folderOrders[currentFolder] = notes[currentFolder].map(note => note.id);
             if (!data.folders.includes(currentFolder)) {
                 data.folders.push(currentFolder);
             }
@@ -2624,7 +2683,12 @@ async function forceLoadFromFirebase(event) {
                 }
             });
             
-            notes[currentFolder] = mergedNotes;
+                        notes[currentFolder] = mergedNotes;
+            
+            // Aplicar orden de Firebase si existe
+            if (data.folderOrders && data.folderOrders[currentFolder]) {
+                folderOrders[currentFolder] = data.folderOrders[currentFolder];
+            }
             renderNotes();
             saveToStorage();
             
@@ -2702,16 +2766,17 @@ async function forceLoadFromFirebase(event) {
         if (!notes[folder]) {
             notes[folder] = [];
         }
-        const newNote = {
-    id: generateId(),
-    title: title || 'Nota',
-    summary: summary,
-    content: content,
-    date: now,
-    color: '#3c3939',
-    deleted: false,
-    position: notes[folder].length // Nueva: posición en la carpeta
-};
+                const newNote = {
+            id: generateId(),
+            title: title || 'Nota',
+            summary: summary,
+            content: content,
+            date: now,
+            color: '#3c3939',
+        };
+        
+        // Añadir al principio
+        if (!notes[folder]) notes[folder] = [];
         notes[folder].unshift(newNote);
     }
     
@@ -2883,30 +2948,11 @@ function generateId() {
         }
         // Delete note
       function deleteNote(idx) {
-    const note = notes[currentFolder][idx];
-    
-    if (confirm('¿Eliminar esta nota?\nTambién se eliminará de otros dispositivos al sincronizar.')) {
-        // Guardar ID para sincronización
-        if (note.id) {
-            deletedNoteIds.push(note.id);
-            // Limpiar IDs antiguos (mantener solo últimos 100)
-            if (deletedNoteIds.length > 100) {
-                deletedNoteIds = deletedNoteIds.slice(-100);
-            }
-    // Limpiar orden después de eliminar
-    if (note.id && folderOrders[currentFolder]) {
-        folderOrders[currentFolder] = folderOrders[currentFolder].filter(id => id !== note.id);
-    }
-    cleanupFolderOrders();
-        }
-        
-        // Eliminar localmente
+    if (confirm('¿Eliminar esta nota?')) {
         notes[currentFolder].splice(idx, 1);
-        
-        // Guardar
         saveToStorage();
         renderNotes();
-        alert('Nota eliminada. Recuerda usar "Sincronizar todo" para eliminarla de otros dispositivos.');
+        alert('Nota eliminada');
     }
 }
         // Show delete folder confirm
@@ -2942,6 +2988,215 @@ function generateId() {
             saveToStorage();
             closeDeleteFolderModal();
         }
+
+async function uploadEverything(event) {
+    showConfirm('subir', 'todos los datos a Firebase', async () => {
+        try {
+            const btn = event?.target;
+            const originalText = btn?.textContent || '';
+            if (btn) {
+                btn.innerHTML = '📤 Subiendo...';
+                btn.disabled = true;
+            }
+            
+            // 1. Obtener datos actuales de Firebase
+            const snapshot = await db.ref('/data').once('value');
+            const firebaseData = snapshot.exists() ? snapshot.val() : { 
+                folders: [], 
+                notes: {}, 
+                deletedNoteIds: [],
+                folderOrders: {}
+            };
+            
+            // 2. Preparar datos para subir (INTELIGENTE pero con orden ACTUAL)
+            const dataToUpload = {
+                folders: folders,
+                currentFolder: currentFolder,
+                favoriteColors: favoriteColors,
+                deletedNoteIds: [...deletedNoteIds],
+                folderOrders: folderOrders, // ← ORDEN ACTUAL SIEMPRE
+                notes: {}
+            };
+            
+            // 3. Para cada carpeta, subir solo notas MODIFICADAS o NUEVAS
+            folders.forEach(folder => {
+                if (!notes[folder]) return;
+                
+                const firebaseNotes = firebaseData.notes?.[folder] || [];
+                const firebaseNoteMap = {};
+                
+                // Mapear notas de Firebase por ID
+                firebaseNotes.forEach(note => {
+                    if (note.id) firebaseNoteMap[note.id] = note;
+                });
+                
+                // Filtrar solo notas modificadas o nuevas
+                dataToUpload.notes[folder] = notes[folder].filter(note => {
+                    if (!note.id) return true; // Nota sin ID, subir
+                    
+                    const firebaseNote = firebaseNoteMap[note.id];
+                    if (!firebaseNote) return true; // Nota no existe en Firebase
+                    
+                    // Subir solo si fecha es más reciente
+                    return new Date(note.date) > new Date(firebaseNote.date);
+                });
+            });
+            
+            // 4. Subir datos
+            await db.ref('/data').set(dataToUpload);
+            
+            // 5. Feedback
+            if (btn) {
+                btn.textContent = '✅ ¡Subido!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }
+            
+            toggleSidebar();
+            alert('Datos subidos a Firebase ✓\n(Notas modificadas + Orden actual)');
+            
+        } catch (err) {
+            alert('Error al subir: ' + err.message);
+            if (event?.target) {
+                event.target.textContent = '❌ Error';
+                setTimeout(() => {
+                    event.target.textContent = '📤 Subir todo a Firebase';
+                    event.target.disabled = false;
+                }, 2000);
+            }
+        }
+    });
+}
+
+async function loadEverything(event) {
+    showConfirm('cargar', 'todos los datos de Firebase', async () => {
+        try {
+            const btn = event?.target;
+            const originalText = btn?.textContent || '';
+            if (btn) {
+                btn.innerHTML = '📥 Cargando...';
+                btn.disabled = true;
+            }
+            
+            // 1. Obtener datos de Firebase
+            const snapshot = await db.ref('/data').once('value');
+            if (!snapshot.exists()) {
+                alert('No hay datos en Firebase');
+                return;
+            }
+            
+            const firebaseData = snapshot.val();
+            if (!firebaseData.notes) {
+                alert('Estructura de datos inválida');
+                return;
+            }
+            
+            // 2. Cargar estructura básica
+            folders = firebaseData.folders || folders;
+            currentFolder = firebaseData.currentFolder || currentFolder;
+            favoriteColors = firebaseData.favoriteColors || favoriteColors;
+            deletedNoteIds = firebaseData.deletedNoteIds || [];
+            folderOrders = firebaseData.folderOrders || {}; // ← CARGA ORDEN DE FIREBASE
+            
+            // 3. Fusionar notas inteligentemente
+            folders.forEach(folder => {
+                const firebaseNotes = firebaseData.notes[folder] || [];
+                const localNotes = notes[folder] || [];
+                
+                // Mapear notas locales por ID
+                const localNoteMap = {};
+                localNotes.forEach(note => {
+                    if (note.id) localNoteMap[note.id] = note;
+                });
+                
+                // Tomar notas más recientes de Firebase
+                const mergedNotes = [...localNotes];
+                
+                firebaseNotes.forEach(firebaseNote => {
+                    if (!firebaseNote.id) return;
+                    
+                    const localNote = localNoteMap[firebaseNote.id];
+                    
+                    if (!localNote) {
+                        // Nota nueva de Firebase
+                        mergedNotes.push(firebaseNote);
+                    } else if (new Date(firebaseNote.date) > new Date(localNote.date)) {
+                        // Nota más reciente en Firebase
+                        const index = mergedNotes.findIndex(n => n.id === firebaseNote.id);
+                        if (index !== -1) {
+                            mergedNotes[index] = firebaseNote;
+                        }
+                    }
+                });
+                
+                // 4. APLICAR ORDEN DE FIREBASE si existe
+                if (folderOrders[folder] && folderOrders[folder].length > 0) {
+                    const orderedNotes = [];
+                    const noteMap = {};
+                    
+                    // Mapear notas por ID
+                    mergedNotes.forEach(note => {
+                        if (note.id) noteMap[note.id] = note;
+                    });
+                    
+                    // Ordenar según folderOrders de Firebase
+                    folderOrders[folder].forEach(id => {
+                        if (noteMap[id] && !noteMap[id].deleted) {
+                            orderedNotes.push(noteMap[id]);
+                        }
+                    });
+                    
+                    // Añadir notas nuevas que no estaban en el orden
+                    mergedNotes.forEach(note => {
+                        if (!folderOrders[folder].includes(note.id) && !note.deleted) {
+                            orderedNotes.push(note);
+                        }
+                    });
+                    
+                    // Actualizar posiciones
+                    orderedNotes.forEach((note, index) => {
+                        note.position = index;
+                    });
+                    
+                    notes[folder] = orderedNotes;
+                } else {
+                    notes[folder] = mergedNotes;
+                }
+            });
+            
+            // 5. Actualizar interfaz
+            saveToStorage();
+            renderFolders();
+            renderFolderDropdown();
+            renderDeleteFolderDropdown();
+            renderNotes();
+            
+            // 6. Feedback
+            if (btn) {
+                btn.textContent = '✅ ¡Cargado!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }
+            
+            toggleSidebar();
+            alert('Datos cargados de Firebase ✓\n(Notas más recientes + Orden de Firebase)');
+            
+        } catch (err) {
+            alert('Error al cargar: ' + err.message);
+            if (event?.target) {
+                event.target.textContent = '❌ Error';
+                setTimeout(() => {
+                    event.target.textContent = '📥 Cargar todo de Firebase';
+                    event.target.disabled = false;
+                }, 2000);
+            }
+        }
+    });
+}
         // Load cloud config
         async function loadCloudConfig() {
             try {

@@ -2095,15 +2095,15 @@ async function forceUploadToFirebase(event) {
                 notesLimpios[folder] = notes[folder].map(note => {
                     // Copia limpia sin campos basura
                     const notaLimpia = {
-                        id: note.id,
+                        id: note.id || generateId(),
                         title: note.title || 'Nota',
                         summary: note.summary || '',
                         content: note.content || '',
-                        date: note.date,
+                        date: note.date || new Date().toISOString(),
                         color: note.color || '#3c3939'
                     };
                     
-                    // Eliminar cualquier campo basura
+                    // Asegurar que no hay campos basura
                     delete notaLimpia.deleted;
                     delete notaLimpia.position;
                     
@@ -2122,7 +2122,8 @@ async function forceUploadToFirebase(event) {
             version: "2.0"
         };
         
-        await db.ref('/').set(data); // Sobreescribe toda la base
+        // ¡IMPORTANTE! Subir a la MISMA ruta
+        await db.ref('/data').set(data);
         
         const uploadBtn = event.target;
         uploadBtn.classList.add('success-flash');
@@ -2130,13 +2131,12 @@ async function forceUploadToFirebase(event) {
             uploadBtn.classList.remove('success-flash');
         }, 300);
         
-        alert('💥 ¡Subido a lo bruto! (Datos LIMPIOS)');
+        alert('💥 ¡Subido a lo bruto! (A /data)');
         toggleSidebar();
     } catch (err) {
         alert('Error al subir: ' + err.message);
     }
 }
-
 // Nueva función de sincronización inteligente
 async function syncEverything(event) {
     showConfirm('sincronizar', 'todos los datos', async () => {
@@ -2468,111 +2468,45 @@ function cleanupFolderOrders() {
 }
 
 async function forceLoadFromFirebase(event) {
-    if (!confirm('⚠️ ¡PELIGRO! Esto SOBREESCRIBIRÁ todo en tu dispositivo.\n¿Estás 100% seguro?')) return;
+    if (!confirm('⚠️ ¡PELIGRO! Esto SOBREESCRIBIRÁ TODO en tu dispositivo.\n¿Estás 100% seguro?')) return;
     
-    if (!confirm('¿REALMENTE SEGURO?\nSe PERDERÁN todos los datos locales actuales.')) return;
+    if (!confirm('¿REALMENTE SEGURO?\nSe PERDERÁN TODOS los datos locales.')) return;
     
     try {
         const snapshot = await db.ref('/').once('value');
         if (!snapshot.exists()) {
-            alert('Firebase está vacío, nada que destruir.');
+            alert('Firebase está vacío, nada que cargar.');
             return;
         }
         
-        const data = snapshot.val();
+        const firebaseData = snapshot.val();
         
-        // Destruir todo local y reemplazar
-        folders = data.folders || ['portapapeles'];
-        notes = data.notes || { portapapeles: [] };
-        currentFolder = data.currentFolder || 'portapapeles';
-        favoriteColors = data.favoriteColors || ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
-        deletedNoteIds = data.deletedNoteIds || [];
-        folderOrders = data.folderOrders || {};
+        // ¡¡SOLO ESTAS 3 LÍNEAS SON DIFERENTES!!
+        // 1. CARGAR CARPETAS
+        folders = firebaseData.folders || ['portapapeles'];
         
-        // APLICAR ORDEN si existe en Firebase
-        if (Object.keys(folderOrders).length > 0) {
-            Object.keys(folderOrders).forEach(folder => {
-                if (notes[folder] && folderOrders[folder]) {
-                    const orderedNotes = [];
-                    const noteMap = {};
-                    
-                    // Mapear notas por ID
-                    notes[folder].forEach(note => {
-                        if (note.id) noteMap[note.id] = note;
-                    });
-                    
-                    // Ordenar según folderOrders
-                    folderOrders[folder].forEach(id => {
-                        if (noteMap[id] && !noteMap[id].deleted) {
-                            orderedNotes.push(noteMap[id]);
-                        }
-                    });
-                    
-                    // Añadir notas nuevas que no estaban en el orden
-                    notes[folder].forEach(note => {
-                        if (!folderOrders[folder].includes(note.id) && !note.deleted) {
-                            orderedNotes.push(note);
-                        }
-                    });
-                    
-                    // Actualizar posición
-                    orderedNotes.forEach((note, index) => {
-                        note.position = index;
-                    });
-                    
-                    notes[folder] = orderedNotes;
-                }
-            });
-        } else {
-            // Si no hay orden en Firebase, crear uno básico
-            folders.forEach(folder => {
-                if (notes[folder]) {
-                    notes[folder].forEach((note, index) => {
-                        if (!note.position) note.position = index;
-                    });
-                    folderOrders[folder] = notes[folder].map(note => note.id);
-                }
-            });
-        }
+        // 2. CARGAR TODAS LAS NOTAS
+        notes = firebaseData.notes || { portapapeles: [] };
         
-        // Asegurar que todas las notas tengan IDs
-        folders.forEach(folder => {
-            if (notes[folder]) {
-                notes[folder].forEach((note, index) => {
-                    if (!note.id) {
-                        note.id = generateId();
-                    }
-                    if (note.position === undefined) {
-                        note.position = index;
-                    }
-                    if (note.deleted === undefined) {
-                        note.deleted = false;
-                    }
-                });
-            }
-        });
+        // 3. EL RESTO ES IGUAL
+        currentFolder = firebaseData.currentFolder || 'portapapeles';
+        favoriteColors = firebaseData.favoriteColors || ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+        folderOrders = firebaseData.folderOrders || {};
         
-        // Actualizar todo
+        // 4. ACTUALIZAR TODO
         renderFolders();
         renderFolderDropdown();
         renderDeleteFolderDropdown();
-        renderFoldersList();
         renderNotes();
         saveToStorage();
         
-        const loadBtn = event.target;
-        loadBtn.classList.add('success-flash');
-        setTimeout(() => {
-            loadBtn.classList.remove('success-flash');
-        }, 300);
-        
-        alert('💣 ¡DESTRUIDO! Tu dispositivo ahora es una copia exacta de Firebase (incluyendo orden).');
+        alert('✅ ¡Cargado TODO a lo bruto!');
         toggleSidebar();
     } catch (err) {
-        alert('Error al cargar a lo bruto: ' + err.message);
+        alert('Error: ' + err.message);
     }
 }
-        // Cargar desde Firebase (todo)
+      // Cargar desde Firebase (todo)
        async function loadFromFirebase(event) {
     showConfirm('cargar', 'todo', async () => {
         try {

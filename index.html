@@ -1543,15 +1543,114 @@ async function loadFolderBruteForce(event) {
             return;
         }
         
-        // Sobrescribir carpeta actual
-        notes[currentFolder] = firebaseData.notes[currentFolder];
+        // Obtener notas de Firebase
+        const firebaseNotes = firebaseData.notes[currentFolder];
+        
+        // 🔄 PASO 1: VERIFICAR SI HAY ORDEN EN FIREBASE
+        const firebaseOrder = firebaseData.folderOrders?.[currentFolder];
+        
+        if (firebaseOrder && firebaseOrder.length > 0) {
+            // 🔄 PASO 2: APLICAR ORDEN DE FIREBASE
+            
+            // Crear mapa de notas por ID
+            const noteMap = {};
+            firebaseNotes.forEach(note => {
+                if (note.id) {
+                    noteMap[note.id] = note;
+                }
+            });
+            
+            // Ordenar según el orden de Firebase
+            const notasOrdenadas = [];
+            const idsProcesados = new Set();
+            
+            // 1. Primero las notas en el orden especificado
+            firebaseOrder.forEach(id => {
+                if (noteMap[id] && !idsProcesados.has(id)) {
+                    notasOrdenadas.push(noteMap[id]);
+                    idsProcesados.add(id);
+                }
+            });
+            
+            // 2. Luego las notas que no estaban en el orden
+            firebaseNotes.forEach(note => {
+                if (note.id && !idsProcesados.has(note.id)) {
+                    notasOrdenadas.push(note);
+                    idsProcesados.add(note.id);
+                } else if (!note.id) {
+                    // Notas sin ID al final
+                    notasOrdenadas.push(note);
+                }
+            });
+            
+            // 🔄 PASO 3: ACTUALIZAR EL ORDEN LOCAL
+            if (!folderOrders) folderOrders = {};
+            folderOrders[currentFolder] = firebaseOrder;
+            
+            // Sobrescribir carpeta actual con notas ordenadas
+            notes[currentFolder] = notasOrdenadas;
+            
+        } else {
+            // 🔄 PASO 4: SI NO HAY ORDEN, USAR ORDEN POR FECHA (más reciente primero)
+            const notasOrdenadasPorFecha = [...firebaseNotes].sort((a, b) => {
+                return new Date(b.date) - new Date(a.date);
+            });
+            
+            // Crear orden basado en fecha
+            const nuevoOrden = notasOrdenadasPorFecha.map(note => note.id).filter(id => id);
+            
+            if (!folderOrders) folderOrders = {};
+            folderOrders[currentFolder] = nuevoOrden;
+            
+            notes[currentFolder] = notasOrdenadasPorFecha;
+        }
+        
+        // 🔄 PASO 5: ACTUALIZAR POSICIONES EN LAS NOTAS
+        notes[currentFolder].forEach((note, index) => {
+            note.position = index;
+        });
+        
         renderNotes();
         saveToStorage();
-        alert('✅ Carpeta cargada a lo bruto');
+        alert('✅ Carpeta cargada a lo bruto (con orden aplicado)');
     } catch (err) {
         alert('Error: ' + err.message);
     }
 }
+
+// Función para asegurar que folderOrders está sincronizado con las notas
+function sincronizarFolderOrders() {
+    if (!folderOrders) folderOrders = {};
+    
+    folders.forEach(folder => {
+        if (notes[folder] && notes[folder].length > 0) {
+            // Obtener IDs de notas actuales
+            const idsActuales = notes[folder]
+                .filter(note => note.id && !note.deleted)
+                .map(note => note.id);
+            
+            // Si no hay orden o está vacío, crear uno nuevo
+            if (!folderOrders[folder] || folderOrders[folder].length === 0) {
+                folderOrders[folder] = idsActuales;
+            } else {
+                // Filtrar IDs que ya no existen
+                folderOrders[folder] = folderOrders[folder].filter(id => 
+                    idsActuales.includes(id)
+                );
+                
+                // Añadir IDs nuevos al final
+                idsActuales.forEach(id => {
+                    if (!folderOrders[folder].includes(id)) {
+                        folderOrders[folder].push(id);
+                    }
+                });
+            }
+        }
+    });
+    
+    saveToStorage();
+}
+
         // Initialize font size
         function initializeFontSize() {
             const savedSize = localStorage.getItem('noteFontSize') || '16';
@@ -2080,13 +2179,8 @@ async function forceUploadToFirebase(event) {
     if (!confirm('¿REALMENTE SEGURO?\nSe DESTRUIRÁN todos los datos en Firebase.')) return;
     
     try {
-        // Calcular orden actual
-        const currentFolderOrders = {};
-        folders.forEach(folder => {
-            if (notes[folder]) {
-                currentFolderOrders[folder] = notes[folder].map(note => note.id);
-            }
-        });
+        // Calcular orden actual (SIEMPRE USAR EL ACTUAL, NO BORRARLO)
+        const currentFolderOrders = folderOrders || {}; // ← USAR EL ACTUAL
         
         // PREPARAR DATOS LIMPIOS
         const notesLimpios = {};
@@ -2109,15 +2203,20 @@ async function forceUploadToFirebase(event) {
                     
                     return notaLimpia;
                 });
+                
+                // Si la carpeta no tiene orden, crearlo
+                if (!currentFolderOrders[folder]) {
+                    currentFolderOrders[folder] = notes[folder].map(note => note.id);
+                }
             }
         });
         
         const data = {
             folders,
-            notes: notesLimpios, // ← USAR LA VERSIÓN LIMPIA
+            notes: notesLimpios,
             currentFolder,
             favoriteColors,
-            folderOrders: currentFolderOrders,
+            folderOrders: currentFolderOrders, // ← ¡MANTENER LOS ÓRDENES!
             timestamp: new Date().toISOString(),
             version: "2.0"
         };
@@ -2131,12 +2230,13 @@ async function forceUploadToFirebase(event) {
             uploadBtn.classList.remove('success-flash');
         }, 300);
         
-        alert('💥 ¡Subido a lo bruto! (A /data)');
+        alert('💥 ¡Subido a lo bruto! (Incluye orden de notas)');
         toggleSidebar();
     } catch (err) {
         alert('Error al subir: ' + err.message);
     }
 }
+
 // Nueva función de sincronización inteligente
 async function syncEverything(event) {
     showConfirm('sincronizar', 'todos los datos', async () => {
@@ -2473,7 +2573,7 @@ async function forceLoadFromFirebase(event) {
     if (!confirm('¿REALMENTE SEGURO?\nSe PERDERÁN TODOS los datos locales.')) return;
     
     try {
-        const snapshot = await db.ref('/').once('value');
+        const snapshot = await db.ref('/data').once('value');
         if (!snapshot.exists()) {
             alert('Firebase está vacío, nada que cargar.');
             return;
@@ -3432,6 +3532,7 @@ function restoreFavoriteColors() {
             initializeData();
             initializeFontSize();
             initializeToggles();
+	    sincronizarFolderOrders();
             renderFolders();
             renderNotes();
             renderFolderDropdown();

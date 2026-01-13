@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1388,142 +1389,357 @@ let folderOrders = {};  // Esto SÍ lo necesitamos para orden
                 notes.portapapeles = [];
             }
         }
-// Subir full lite (solo cambios)
-// Subir full lite - VERSIÓN CORREGIDA
 async function uploadFullLite(event) {
     try {
+        // 1. OBTENER DATOS ACTUALES DE FIREBASE
         const snapshot = await db.ref('/data').once('value');
         const firebaseData = snapshot.exists() ? snapshot.val() : { 
             folders: [], 
             notes: {}, 
-            favoriteColors: [] 
+            favoriteColors: [],
+            folderOrders: {},
+            timestamp: new Date().toISOString(),
+            version: "2.0"
         };
         
+        // 2. CREAR COPIA BASE (MANTENER TODO DE FIREBASE)
         const dataToUpload = {
-            folders: folders,
+            ...firebaseData,
+            
+            // 3. ACTUALIZAR METADATOS (SIEMPRE)
             currentFolder: currentFolder,
             favoriteColors: favoriteColors,
-            notes: {}
+            timestamp: new Date().toISOString(),
+            version: "2.0"
         };
         
-        // Solo subir notas modificadas o nuevas - LIMPIANDO CAMPOS BASURA
+        // 4. ACTUALIZAR CARPETAS (AÑADIR NUEVAS)
         folders.forEach(folder => {
-            if (!notes[folder]) return;
+            if (!dataToUpload.folders.includes(folder)) {
+                dataToUpload.folders.push(folder);
+            }
+        });
+        
+        // 5. GARANTIZAR ESTRUCTURAS
+        if (!dataToUpload.notes) dataToUpload.notes = {};
+        if (!dataToUpload.folderOrders) dataToUpload.folderOrders = {};
+        
+        // 6. PARA CADA CARPETA LOCAL
+        folders.forEach(folder => {
+            if (!notes[folder] || notes[folder].length === 0) return;
             
-            const firebaseNotes = firebaseData.notes?.[folder] || [];
+            // Inicializar si no existe
+            if (!dataToUpload.notes[folder]) {
+                dataToUpload.notes[folder] = [];
+            }
+            if (!dataToUpload.folderOrders[folder]) {
+                dataToUpload.folderOrders[folder] = [];
+            }
+            
+            // 7. MAPAS PARA PROCESAMIENTO
+            const firebaseNotes = dataToUpload.notes[folder];
             const firebaseNoteMap = {};
             firebaseNotes.forEach(note => {
                 if (note.id) firebaseNoteMap[note.id] = note;
             });
             
-            dataToUpload.notes[folder] = notes[folder]
-                .filter(note => {
-                    if (!note.id) return true;
-                    const firebaseNote = firebaseNoteMap[note.id];
-                    if (!firebaseNote) return true;
-                    return new Date(note.date) > new Date(firebaseNote.date);
-                })
-                .map(note => {
-                    // Crear copia LIMPIA
-                    const notaLimpia = {
-                        id: note.id,
-                        title: note.title || 'Nota',
-                        summary: note.summary || '',
-                        content: note.content || '',
-                        date: note.date,
-                        color: note.color || '#3c3939'
+            // 8. OBTENER ORDEN LOCAL PARA ESTA CARPETA
+            const ordenLocal = folderOrders[folder] || [];
+            
+            // 9. SEPARAR NOTAS EN DOS GRUPOS
+            const notasExistentes = []; // IDs que ya existen en Firebase
+            const notasNuevas = [];     // IDs que NO existen en Firebase
+            
+            // Primero: IDs del orden local que existen en Firebase
+            ordenLocal.forEach(id => {
+                if (firebaseNoteMap[id]) {
+                    notasExistentes.push(id);
+                } else {
+                    // Verificar si este ID existe en notas locales
+                    const notaLocal = notes[folder].find(n => n.id === id);
+                    if (notaLocal) {
+                        notasNuevas.push(id);
+                    }
+                }
+            });
+            
+            // 10. PASO 1: REORGANIZAR NOTAS EXISTENTES SEGÚN ORDEN LOCAL
+            // Esto SOBREESCRIBE el orden de Firebase con el orden local
+            dataToUpload.folderOrders[folder] = [...notasExistentes];
+            
+            // 11. PASO 2: PROCESAR CADA NOTA EXISTENTE
+            notasExistentes.forEach(id => {
+                const firebaseNote = firebaseNoteMap[id];
+                const notaLocal = notes[folder].find(n => n.id === id);
+                
+                if (!notaLocal || !firebaseNote) return;
+                
+                // Encontrar índice en Firebase
+                const firebaseIndex = firebaseNotes.findIndex(n => n.id === id);
+                if (firebaseIndex === -1) return;
+                
+                // Verificar si está modificada (por fecha)
+                const localDate = new Date(notaLocal.date || 0);
+                const firebaseDate = new Date(firebaseNote.date || 0);
+                
+                if (localDate > firebaseDate) {
+                    // Actualizar solo campos modificables
+                    firebaseNotes[firebaseIndex] = {
+                        ...firebaseNote,
+                        title: notaLocal.title || firebaseNote.title,
+                        summary: notaLocal.summary || firebaseNote.summary,
+                        content: notaLocal.content || firebaseNote.content,
+                        date: notaLocal.date,
+                        color: notaLocal.color || firebaseNote.color
                     };
-                    
-                    delete notaLimpia.deleted;
-                    delete notaLimpia.position;
-                    
-                    return notaLimpia;
-                });
-        });
-        
-        // LIMPIAR TAMBIÉN LAS NOTAS EXISTENTES QUE NO SE MODIFICARON
-        folders.forEach(folder => {
-            if (firebaseData.notes?.[folder] && !dataToUpload.notes[folder]) {
-                dataToUpload.notes[folder] = firebaseData.notes[folder].map(note => {
-                    const { deleted, position, ...notaLimpia } = note;
-                    return notaLimpia;
-                });
-            }
-        });
-        
-        await db.ref('/data').set(dataToUpload);
-        alert('✅ Subido full lite (solo cambios y LIMPIO)');
-    } catch (err) {
-        alert('Error: ' + err.message);
-    }
-}
-// Subir carpeta lite
-// Subir carpeta lite - VERSIÓN CORREGIDA
-async function uploadFolderLite(event) {
-    try {
-        const snapshot = await db.ref('/data').once('value');
-        const firebaseData = snapshot.exists() ? snapshot.val() : { 
-            folders: [], 
-            notes: {} 
-        };
-        
-        const firebaseNotes = firebaseData.notes?.[currentFolder] || [];
-        const firebaseNoteMap = {};
-        firebaseNotes.forEach(note => {
-            if (note.id) firebaseNoteMap[note.id] = note;
-        });
-        
-        // Solo notas modificadas o nuevas - LIMPIANDO CAMPOS BASURA
-        const notesToUpload = notes[currentFolder]
-            .filter(note => {
-                if (!note.id) return true;
-                const firebaseNote = firebaseNoteMap[note.id];
-                if (!firebaseNote) return true;
-                return new Date(note.date) > new Date(firebaseNote.date);
-            })
-            .map(note => {
-                // Crear copia LIMPIA sin campos basura
+                }
+                // Si no está modificada, mantener como está
+            });
+            
+            // 12. PASO 3: PROCESAR NOTAS NUEVAS CON SISTEMA DE VECINOS
+            notasNuevas.forEach((idNuevo, indexNuevo) => {
+                const notaNueva = notes[folder].find(n => n.id === idNuevo);
+                if (!notaNueva) return;
+                
+                // Limpiar nota nueva
                 const notaLimpia = {
-                    id: note.id,
-                    title: note.title || 'Nota',
-                    summary: note.summary || '',
-                    content: note.content || '',
-                    date: note.date,
-                    color: note.color || '#3c3939'
+                    id: notaNueva.id,
+                    title: notaNueva.title || 'Nota',
+                    summary: notaNueva.summary || '',
+                    content: notaNueva.content || '',
+                    date: notaNueva.date || new Date().toISOString(),
+                    color: notaNueva.color || '#3c3939'
                 };
                 
-                // Eliminar campos innecesarios si existen
                 delete notaLimpia.deleted;
                 delete notaLimpia.position;
                 
-                return notaLimpia;
+                // Añadir a Firebase
+                firebaseNotes.push(notaLimpia);
+                
+                // INTENTAR POSICIONAR CON SISTEMA DE VECINOS
+                let posicionada = false;
+                
+                // Buscar vecinos en el orden local
+                if (indexNuevo > 0) {
+                    const idVecinoAnterior = ordenLocal[indexNuevo - 1];
+                    const idVecinoSiguiente = ordenLocal[indexNuevo + 1];
+                    
+                    // Verificar si los vecinos existen en el orden de Firebase
+                    if (idVecinoAnterior && dataToUpload.folderOrders[folder].includes(idVecinoAnterior)) {
+                        // Posicionar después del vecino anterior
+                        const indiceVecino = dataToUpload.folderOrders[folder].indexOf(idVecinoAnterior);
+                        dataToUpload.folderOrders[folder].splice(indiceVecino + 1, 0, idNuevo);
+                        posicionada = true;
+                    } 
+                    else if (idVecinoSiguiente && dataToUpload.folderOrders[folder].includes(idVecinoSiguiente)) {
+                        // Posicionar antes del vecino siguiente
+                        const indiceVecino = dataToUpload.folderOrders[folder].indexOf(idVecinoSiguiente);
+                        dataToUpload.folderOrders[folder].splice(indiceVecino, 0, idNuevo);
+                        posicionada = true;
+                    }
+                }
+                
+                // SI EL SISTEMA DE VECINOS FALLA → POSICIONAR ARRIBA
+                if (!posicionada) {
+                    dataToUpload.folderOrders[folder].unshift(idNuevo);
+                }
             });
-        
-        const data = firebaseData;
-        if (!data.notes) data.notes = {};
-        if (!data.notes[currentFolder]) data.notes[currentFolder] = [];
-        
-        notesToUpload.forEach(newNote => {
-            const existingIndex = data.notes[currentFolder].findIndex(n => n.id === newNote.id);
-            if (existingIndex !== -1) {
-                data.notes[currentFolder][existingIndex] = newNote;
-            } else {
-                data.notes[currentFolder].push(newNote);
-            }
-        });
-        
-        // LIMPIAR TAMBIÉN LAS NOTAS EXISTENTES EN FIREBASE
-        if (data.notes[currentFolder]) {
-            data.notes[currentFolder] = data.notes[currentFolder].map(note => {
+            
+            // 13. LIMPIAR CAMPOS BASURA
+            dataToUpload.notes[folder] = firebaseNotes.map(note => {
                 const { deleted, position, ...notaLimpia } = note;
                 return notaLimpia;
             });
+        });
+        
+        // 14. SUBIR A FIREBASE
+        await db.ref('/data').set(dataToUpload);
+        
+        alert('✅ Subido full lite:\n' +
+              '• Reorganizó notas existentes según orden LOCAL ✓\n' +
+              '• Procesó nuevas notas con sistema de vecinos ✓\n' +
+              '• No eliminó nada de Firebase ✓\n' +
+              '• Solo actualizó notas modificadas ✓');
+        
+    } catch (err) {
+        console.error('Error en uploadFullLite:', err);
+        alert('Error en uploadFullLite: ' + err.message);
+    }
+}
+
+// Función para actualizar folderOrders local (debes tenerla ya)
+function actualizarFolderOrdersLocal(folder) {
+    if (!folderOrders) folderOrders = {};
+    
+    // Obtener IDs de todas las notas en la carpeta (en orden actual)
+    const idsActuales = notes[folder]
+        .filter(note => !note.deleted && note.id)
+        .map(note => note.id);
+    
+    // Actualizar con orden actual
+    folderOrders[folder] = idsActuales;
+    saveToStorage();
+}
+
+// Subir carpeta lite
+async function uploadFolderLite(event) {
+    try {
+        // 1. OBTENER DATOS ACTUALES DE FIREBASE
+        const snapshot = await db.ref('/data').once('value');
+        const firebaseData = snapshot.exists() ? snapshot.val() : { 
+            folders: [], 
+            notes: {}, 
+            favoriteColors: [],
+            folderOrders: {},
+            timestamp: new Date().toISOString(),
+            version: "2.0"
+        };
+        
+        console.log(`Subiendo carpeta: ${currentFolder}`);
+        
+        // 2. CREAR COPIA BASE CON TUS REQUERIMIENTOS ESPECÍFICOS
+        const dataToUpload = {
+            // 🔹 MANTENER todo lo existente
+            ...firebaseData,
+            
+            // 🔹 REEMPLAZAR SIEMPRE favoriteColors
+            favoriteColors: favoriteColors,
+            
+            // 🔹 ACTUALIZAR timestamp y version
+            timestamp: new Date().toISOString(),
+            version: "2.0"
+            
+            // 🔹 currentFolder NO se cambia (se mantiene de firebaseData)
+        };
+        
+        // 3. GARANTIZAR QUE LA CARPETA EXISTE EN FOLDERS (solo añadir si no existe)
+        if (!dataToUpload.folders.includes(currentFolder)) {
+            dataToUpload.folders.push(currentFolder);
         }
         
-        await db.ref('/data').set(data);
-        alert('✅ Carpeta subida lite (solo cambios y LIMPIA)');
+        // 4. OBTENER DATOS DE AMBAS PARTES
+        const notasLocales = notes[currentFolder] || [];
+        const notasFirebase = firebaseData.notes?.[currentFolder] || [];
+        const ordenLocal = folderOrders[currentFolder] || [];
+        
+        // Crear mapas para búsqueda rápida
+        const mapaFirebase = {};
+        notasFirebase.forEach(note => {
+            if (note.id) mapaFirebase[note.id] = note;
+        });
+        
+        const mapaLocal = {};
+        notasLocales.forEach(note => {
+            if (note.id) mapaLocal[note.id] = note;
+        });
+        
+        // 5. SEPARAR NOTAS EN TRES CATEGORÍAS
+        const idsExistentesEnAmbos = [];  // IDs que existen en ambos lados
+        const idsSoloEnFirebase = [];     // IDs que solo existen en Firebase
+        const idsSoloEnLocal = [];        // IDs que solo existen en Local (nuevas)
+        
+        // Identificar todos los IDs únicos
+        const todosIds = new Set([
+            ...notasFirebase.map(n => n.id).filter(id => id),
+            ...notasLocales.map(n => n.id).filter(id => id)
+        ]);
+        
+        // Clasificar cada ID
+        todosIds.forEach(id => {
+            const existeEnFirebase = mapaFirebase[id] !== undefined;
+            const existeEnLocal = mapaLocal[id] !== undefined;
+            
+            if (existeEnFirebase && existeEnLocal) {
+                idsExistentesEnAmbos.push(id);
+            } else if (existeEnFirebase && !existeEnLocal) {
+                idsSoloEnFirebase.push(id);
+            } else if (!existeEnFirebase && existeEnLocal) {
+                idsSoloEnLocal.push(id);
+            }
+        });
+        
+        // 6. 🔄 PASO 1: REORGANIZAR NOTAS EXISTENTES COMO LOCAL
+        // Usar el orden local COMO BASE para notas existentes
+        const ordenFinal = [];
+        
+        // Primero: IDs existentes en ambos, en orden LOCAL
+        ordenLocal.forEach(id => {
+            if (idsExistentesEnAmbos.includes(id)) {
+                ordenFinal.push(id);
+            }
+        });
+        
+        // 7. 🔄 PASO 2: PROCESAR NOTAS NUEVAS CON SISTEMA DE VECINOS
+        idsSoloEnLocal.forEach((idNuevo, indexNuevo) => {
+            const posicionEnOrdenLocal = ordenLocal.indexOf(idNuevo);
+            
+            if (posicionEnOrdenLocal > 0) {
+                // 🔍 SISTEMA DE VECINOS: Buscar vecinos en orden local
+                const idVecinoAnterior = ordenLocal[posicionEnOrdenLocal - 1];
+                const idVecinoSiguiente = ordenLocal[posicionEnOrdenLocal + 1];
+                
+                // Verificar si los vecinos están en el orden final
+                const indiceVecinoAnterior = ordenFinal.indexOf(idVecinoAnterior);
+                const indiceVecinoSiguiente = ordenFinal.indexOf(idVecinoSiguiente);
+                
+                if (indiceVecinoAnterior !== -1) {
+                    // Posicionar DESPUÉS del vecino anterior
+                    ordenFinal.splice(indiceVecinoAnterior + 1, 0, idNuevo);
+                    return;
+                } else if (indiceVecinoSiguiente !== -1) {
+                    // Posicionar ANTES del vecino siguiente
+                    ordenFinal.splice(indiceVecinoSiguiente, 0, idNuevo);
+                    return;
+                }
+            }
+            
+            // 🔄 EXCEPCIÓN: Si sistema de vecinos falla, poner ARRIBA
+            ordenFinal.unshift(idNuevo);
+        });
+        
+        // 8. 🔄 PASO 3: AÑADIR NOTAS QUE SOLO EXISTEN EN FIREBASE (al final)
+        idsSoloEnFirebase.forEach(id => {
+            if (!ordenFinal.includes(id)) {
+                ordenFinal.push(id);
+            }
+        });
+        
+        // 9. CONSTRUIR ARRAY FINAL DE NOTAS
+        const notasFinales = [];
+        
+        // Primero: notas según ordenFinal
+        ordenFinal.forEach(id => {
+            // Prioridad: nota local si existe, sino nota de Firebase
+            const nota = mapaLocal[id] || mapaFirebase[id];
+            if (nota) {
+                // Limpiar campos basura
+                const { deleted, position, ...notaLimpia } = nota;
+                notasFinales.push(notaLimpia);
+            }
+        });
+        
+        // 10. ACTUALIZAR folderOrders (solo para esta carpeta)
+        if (!dataToUpload.folderOrders) dataToUpload.folderOrders = {};
+        dataToUpload.folderOrders[currentFolder] = ordenFinal;
+        
+        // 11. ACTUALIZAR notas de esta carpeta
+        if (!dataToUpload.notes) dataToUpload.notes = {};
+        dataToUpload.notes[currentFolder] = notasFinales;
+        
+        // 12. SUBIR A FIREBASE
+        await db.ref('/data').set(dataToUpload);
+        
+        alert(`✅ Carpeta "${currentFolder}" subida lite:\n` +
+              `• Reorganizó ${idsExistentesEnAmbos.length} notas existentes según orden LOCAL\n` +
+              `• Procesó ${idsSoloEnLocal.length} notas nuevas con sistema de vecinos\n` +
+              `• Mantuvo ${idsSoloEnFirebase.length} notas solo en Firebase\n` +
+              `• Total: ${notasFinales.length} notas en Firebase\n` +
+              `• NO eliminó nada`);
+        
     } catch (err) {
-        alert('Error: ' + err.message);
+        alert('Error en uploadFolderLite: ' + err.message);
+        console.error('Error:', err);
     }
 }
 // Cargar carpeta a lo bruto
@@ -1866,32 +2082,40 @@ function sincronizarFolderOrders() {
             }
         }
         // On drag end for notes
-        function onDragEnd(event) {
-            if (dragNoteIndex === null) return;
-            stopAutoScroll();
-            const notesList = document.getElementById('notes-list');
-            const dragNoteEl = document.querySelector('.note.dragging');
-            dragNoteEl.classList.remove('dragging');
-            dragNoteEl.style.transform = '';
-            // Encontrar nuevo índice
-            const children = Array.from(notesList.children);
-            const placeholderIndex = children.indexOf(dragPlaceholder);
-            // Mover en array
-            // Mover en array
-const [movedNote] = notes[currentFolder].splice(dragNoteIndex, 1);
-const newIndex = placeholderIndex > dragNoteIndex ? placeholderIndex - 1 : placeholderIndex;
-notes[currentFolder].splice(newIndex, 0, movedNote);
-
-            dragPlaceholder.remove();
-            dragPlaceholder = null;
-            dragNoteIndex = null;
-            dragOffsetY = 0;
-            saveToStorage();
-            renderNotes();
-            document.removeEventListener('pointermove', onDragMove);
-            document.removeEventListener('pointerup', onDragEnd);
-            document.removeEventListener('pointercancel', onDragEnd);
-        }
+        // En la función onDragEnd (alrededor de línea 760), modificar:
+function onDragEnd(event) {
+    if (dragNoteIndex === null) return;
+    stopAutoScroll();
+    
+    const notesList = document.getElementById('notes-list');
+    const dragNoteEl = document.querySelector('.note.dragging');
+    dragNoteEl.classList.remove('dragging');
+    dragNoteEl.style.transform = '';
+    
+    // Encontrar nuevo índice
+    const children = Array.from(notesList.children);
+    const placeholderIndex = children.indexOf(dragPlaceholder);
+    
+    // Mover en array
+    const [movedNote] = notes[currentFolder].splice(dragNoteIndex, 1);
+    const newIndex = placeholderIndex > dragNoteIndex ? placeholderIndex - 1 : placeholderIndex;
+    notes[currentFolder].splice(newIndex, 0, movedNote);
+    
+    // ✅✅✅ AQUÍ DEBE ESTAR LA LLAMADA CRÍTICA:
+    actualizarFolderOrdersLocal(currentFolder); // ← ESTA LÍNEA DEBE ESTAR
+    
+    dragPlaceholder.remove();
+    dragPlaceholder = null;
+    dragNoteIndex = null;
+    dragOffsetY = 0;
+    
+    saveToStorage();
+    renderNotes();
+    
+    document.removeEventListener('pointermove', onDragMove);
+    document.removeEventListener('pointerup', onDragEnd);
+    document.removeEventListener('pointercancel', onDragEnd);
+}
         // Start drag for folders
         function startFolderDrag(index, event) {
             event.preventDefault();
@@ -2844,8 +3068,9 @@ data.folderOrders[currentFolder] = notes[currentFolder].map(note => note.id);
             navigationStack.pop();
         }
         // Save note
-        function saveNote() {
-        const title = document.getElementById('note-title').value.trim();
+        // En la función saveNote (alrededor de línea 1550), modificar:
+function saveNote() {
+    const title = document.getElementById('note-title').value.trim();
     const summary = document.getElementById('note-summary').value.trim();
     const content = document.getElementById('note-content').value.trim();
     let folder = document.getElementById('note-folder').value;
@@ -2861,21 +3086,24 @@ data.folderOrders[currentFolder] = notes[currentFolder].map(note => note.id);
         folder = currentEditFolder;
         const originalNote = notes[folder][currentEditIndex];
         const newNote = {
-    id: originalNote.id || generateId(),
-    title: title || 'Nota sin título',
-    summary: summary,
-    content: content,
-    date: now,
-    color: originalNote.color,
-    deleted: false,
-    position: originalNote.position // Mantener misma posición
-};
+            id: originalNote.id || generateId(),
+            title: title || 'Nota sin título',
+            summary: summary,
+            content: content,
+            date: now,
+            color: originalNote.color,
+            deleted: false,
+            position: originalNote.position
+        };
         notes[folder][currentEditIndex] = newNote;
+        
+        // ✅ folderOrders no cambia al editar
     } else {
         if (!notes[folder]) {
             notes[folder] = [];
         }
-                const newNote = {
+        
+        const newNote = {
             id: generateId(),
             title: title || 'Nota',
             summary: summary,
@@ -2885,8 +3113,10 @@ data.folderOrders[currentFolder] = notes[currentFolder].map(note => note.id);
         };
         
         // Añadir al principio
-        if (!notes[folder]) notes[folder] = [];
         notes[folder].unshift(newNote);
+        
+        // ✅ ACTUALIZAR folderOrders con nueva nota AL PRINCIPIO
+        actualizarFolderOrders(folder);
     }
     
     isEdit = false;
@@ -3056,14 +3286,88 @@ function generateId() {
             pushToNavigationStack('confirm-modal');
         }
         // Delete note
-      function deleteNote(idx) {
+      // En la función deleteNote (alrededor de línea 1750), modificar:
+function deleteNote(idx) {
     if (confirm('¿Eliminar esta nota?')) {
+        const notaEliminada = notes[currentFolder][idx];
+        
+        // Eliminar la nota
         notes[currentFolder].splice(idx, 1);
+        
+        // ✅ ACTUALIZAR folderOrders (eliminar el ID)
+        actualizarFolderOrders(currentFolder);
+        
         saveToStorage();
         renderNotes();
         alert('Nota eliminada');
     }
 }
+
+// Función para preparar folderOrders para subir a Firebase
+function prepararFolderOrdersParaFirebase() {
+    const folderOrdersParaFirebase = {};
+    
+    folders.forEach(folder => {
+        if (notes[folder] && notes[folder].length > 0) {
+            // 1. Obtener IDs de notas EXISTENTES en Firebase
+            const idsExistentesEnFirebase = []; // Esto debería venir de una consulta
+            
+            // 2. Obtener IDs locales
+            const idsLocales = notes[folder].map(note => note.id);
+            
+            // 3. Obtener orden actual (si existe)
+            const ordenActual = folderOrders[folder] || [];
+            
+            // 4. Filtrar solo IDs que existen localmente
+            const ordenFiltrado = ordenActual.filter(id => idsLocales.includes(id));
+            
+            // 5. Para IDs NUEVOS (no en ordenActual), intentar posicionarlos inteligentemente
+            const idsNuevos = idsLocales.filter(id => !ordenFiltrado.includes(id));
+            
+            if (idsNuevos.length > 0) {
+                console.log(`IDs nuevos en ${folder}:`, idsNuevos);
+                
+                // ESTRATEGIA: Buscar vecinos para posicionar notas nuevas
+                idsNuevos.forEach((idNuevo, index) => {
+                    const notaNueva = notes[folder].find(n => n.id === idNuevo);
+                    
+                    // Intentar encontrar notas con fecha similar
+                    const notasSimilares = notes[folder]
+                        .filter(n => n.id !== idNuevo)
+                        .map(n => ({
+                            id: n.id,
+                            fecha: new Date(n.date),
+                            diferencia: Math.abs(new Date(notaNueva.date) - new Date(n.date))
+                        }))
+                        .sort((a, b) => a.diferencia - b.diferencia);
+                    
+                    if (notasSimilares.length > 0) {
+                        // Posicionar después de la nota más similar
+                        const vecinoId = notasSimilares[0].id;
+                        const vecinoIndex = ordenFiltrado.indexOf(vecinoId);
+                        
+                        if (vecinoIndex !== -1) {
+                            // Insertar después del vecino
+                            ordenFiltrado.splice(vecinoIndex + 1, 0, idNuevo);
+                        } else {
+                            // Si no encuentra vecino, poner al principio
+                            ordenFiltrado.unshift(idNuevo);
+                        }
+                    } else {
+                        // No hay notas similares, poner al principio
+                        ordenFiltrado.unshift(idNuevo);
+                    }
+                });
+            }
+            
+            // 6. Guardar orden final
+            folderOrdersParaFirebase[folder] = ordenFiltrado;
+        }
+    });
+    
+    return folderOrdersParaFirebase;
+}
+
         // Show delete folder confirm
         function showDeleteFolderConfirm() {
             const folder = document.getElementById('delete-folder-select').value;
@@ -3082,21 +3386,45 @@ function generateId() {
             navigationStack.pop();
         }
         // Delete selected folder
-        function deleteSelectedFolder() {
-            const folder = document.getElementById('delete-folder-select').value;
-            delete notes[folder];
-            folders = folders.filter(f => f !== folder);
-            if (currentFolder === folder) {
-                currentFolder = 'portapapeles';
-            }
-            renderFolders();
-            renderNotes();
-            renderFolderDropdown();
-            renderDeleteFolderDropdown();
-            renderFoldersList();
-            saveToStorage();
-            closeDeleteFolderModal();
-        }
+        // Delete selected folder - VERSIÓN CORREGIDA
+function deleteSelectedFolder() {
+    const folder = document.getElementById('delete-folder-select').value;
+    if (!folder || folder === 'portapapeles') {
+        alert('Selecciona una carpeta válida para eliminar.');
+        return;
+    }
+    
+    // 1. ELIMINAR CARPETA DE LISTA
+    folders = folders.filter(f => f !== folder);
+    
+    // 2. ELIMINAR TODAS LAS NOTAS DE ESA CARPETA
+    delete notes[folder];
+    
+    // 3. ELIMINAR ORDEN DE ESA CARPETA (¡IMPORTANTE!)
+    if (folderOrders && folderOrders[folder]) {
+        delete folderOrders[folder];
+    }
+    
+    // 4. Si la carpeta actual es la que se elimina, cambiar a portapapeles
+    if (currentFolder === folder) {
+        currentFolder = 'portapapeles';
+    }
+    
+    // 5. ACTUALIZAR INTERFAZ
+    renderFolders();
+    renderNotes();
+    renderFolderDropdown();
+    renderDeleteFolderDropdown();
+    renderFoldersList();
+    
+    // 6. GUARDAR CAMBIOS
+    saveToStorage();
+    
+    // 7. CERRAR MODAL
+    closeDeleteFolderModal();
+    
+    alert(`✅ Carpeta "${folder}" eliminada completamente (incluye orden)`);
+}
 
 async function uploadEverything(event) {
     showConfirm('subir', 'todos los datos a Firebase', async () => {
@@ -3372,12 +3700,32 @@ async function loadEverything(event) {
             closeFoldersOptionsModal();
         }
         // Show delete folder modal
-        function showDeleteFolderModal() {
-            renderDeleteFolderDropdown();
-            document.getElementById('delete-folder-modal').classList.add('open');
-            toggleSidebar();
-            pushToNavigationStack('delete-folder-modal');
-        }
+        // Show delete folder modal - VERSIÓN MEJORADA
+function showDeleteFolderModal() {
+    // Filtrar SOLO carpetas que existen en notes (evita carpetas zombies)
+    const carpetasConNotas = folders.filter(folder => 
+        folder !== 'portapapeles' && 
+        notes[folder] && 
+        notes[folder].length > 0
+    );
+    
+    const select = document.getElementById('delete-folder-select');
+    
+    if (carpetasConNotas.length === 0) {
+        select.innerHTML = '<option value="">No hay carpetas para eliminar</option>';
+        select.disabled = true;
+    } else {
+        select.innerHTML = carpetasConNotas.map(folder =>
+            `<option value="${escapeHtml(folder)}">${escapeHtml(folder)}</option>`
+        ).join('');
+        select.disabled = false;
+    }
+    
+    document.getElementById('delete-folder-modal').classList.add('open');
+    toggleSidebar();
+    pushToNavigationStack('delete-folder-modal');
+}
+
         // Close delete folder modal
         function closeDeleteFolderModal() {
             document.getElementById('delete-folder-modal').classList.remove('open');
@@ -3505,6 +3853,137 @@ function restoreFavoriteColors() {
         closeColorModal();
         alert('Color aplicado y guardado en favoritos');
     }
+}
+// Esta función debe llamarse CADA VEZ que cambie el orden de las notas
+function actualizarFolderOrders(folder) {
+    if (!folderOrders) folderOrders = {};
+    
+    // Obtener IDs de todas las notas en la carpeta (en orden actual)
+    const idsActuales = notes[folder]
+        .filter(note => !note.deleted && note.id) // Solo notas activas con ID
+        .map(note => note.id);
+    
+    // Si no hay IDs, limpiar el orden
+    if (idsActuales.length === 0) {
+        delete folderOrders[folder];
+        return;
+    }
+    
+    // Obtener orden actual (si existe)
+    const ordenActual = folderOrders[folder] || [];
+    
+    // Filtrar IDs que ya no existen
+    const ordenFiltrado = ordenActual.filter(id => idsActuales.includes(id));
+    
+    // Añadir IDs nuevos que no estaban en el orden
+    const nuevosIds = idsActuales.filter(id => !ordenFiltrado.includes(id));
+    
+    // Combinar: orden existente + nuevos al final
+    folderOrders[folder] = [...ordenFiltrado, ...nuevosIds];
+    
+    // Guardar cambios
+    saveToStorage();
+    console.log(`✅ folderOrders actualizado para carpeta: ${folder}`, folderOrders[folder]);
+}
+
+// FUNCIÓN AUXILIAR PARA FUSIONAR folderOrders INTELIGENTEMENTE
+function inteligentementeFusionarFolderOrders(folderOrdersFirebase, folderOrdersLocal, notasLocales) {
+    const resultado = {};
+    
+    // 1. Primero copiar TODOS los folderOrders de Firebase
+    if (folderOrdersFirebase) {
+        Object.keys(folderOrdersFirebase).forEach(carpeta => {
+            resultado[carpeta] = [...folderOrdersFirebase[carpeta]];
+        });
+    }
+    
+    // 2. Para cada carpeta LOCAL, fusionar inteligentemente
+    Object.keys(notasLocales).forEach(carpeta => {
+        const idsLocales = notasLocales[carpeta]
+            .filter(nota => nota.id && !nota.deleted)
+            .map(nota => nota.id);
+        
+        // Si la carpeta no existe en Firebase, crear orden nuevo
+        if (!resultado[carpeta]) {
+            resultado[carpeta] = [...idsLocales];
+            return;
+        }
+        
+        // La carpeta existe en Firebase, fusionar inteligentemente
+        const ordenFirebase = resultado[carpeta] || [];
+        
+        // A. Mantener IDs que aún existen localmente
+        const ordenFiltrado = ordenFirebase.filter(id => idsLocales.includes(id));
+        
+        // B. Identificar IDs NUEVOS (locales que no están en Firebase)
+        const idsNuevos = idsLocales.filter(id => !ordenFiltrado.includes(id));
+        
+        // C. Posicionar IDs nuevos basado en fecha
+        idsNuevos.forEach(idNuevo => {
+            const notaNueva = notasLocales[carpeta].find(n => n.id === idNuevo);
+            if (!notaNueva) return;
+            
+            const fechaNueva = new Date(notaNueva.date);
+            let posicionado = false;
+            
+            // Buscar posición cronológica
+            for (let i = 0; i < ordenFiltrado.length - 1; i++) {
+                const idActual = ordenFiltrado[i];
+                const idSiguiente = ordenFiltrado[i + 1];
+                
+                const notaActual = notasLocales[carpeta].find(n => n.id === idActual);
+                const notaSiguiente = notasLocales[carpeta].find(n => n.id === idSiguiente);
+                
+                if (notaActual && notaSiguiente) {
+                    const fechaActual = new Date(notaActual.date);
+                    const fechaSiguiente = new Date(notaSiguiente.date);
+                    
+                    // Si está entre estas dos fechas
+                    if (fechaNueva < fechaActual && fechaNueva > fechaSiguiente) {
+                        ordenFiltrado.splice(i + 1, 0, idNuevo);
+                        posicionado = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Si no se posicionó, poner según fecha
+            if (!posicionado) {
+                if (ordenFiltrado.length > 0) {
+                    const primeraNota = notasLocales[carpeta].find(n => n.id === ordenFiltrado[0]);
+                    if (primeraNota && fechaNueva > new Date(primeraNota.date)) {
+                        ordenFiltrado.unshift(idNuevo); // Más reciente, va primero
+                    } else {
+                        ordenFiltrado.push(idNuevo); // Más antigua, va al final
+                    }
+                } else {
+                    ordenFiltrado.push(idNuevo);
+                }
+            }
+        });
+        
+        resultado[carpeta] = ordenFiltrado;
+    });
+    
+    return resultado;
+}
+
+// Función para mover nota y actualizar folderOrders
+function moverNotaConOrden(carpeta, desdeIndex, hastaIndex) {
+    // Mover la nota en el array
+    const [notaMovida] = notes[carpeta].splice(desdeIndex, 1);
+    notes[carpeta].splice(hastaIndex, 0, notaMovida);
+    
+    // Actualizar folderOrders para reflejar el nuevo orden
+    actualizarFolderOrders(carpeta);
+    
+    // Actualizar posiciones individuales (opcional)
+    notes[carpeta].forEach((nota, index) => {
+        nota.position = index;
+    });
+    
+    renderNotes();
+    saveToStorage();
 }
         function getContrastColor(hexcolor) {
             // Convert hex to RGB
